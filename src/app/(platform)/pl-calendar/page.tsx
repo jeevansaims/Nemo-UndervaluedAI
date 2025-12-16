@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -17,10 +18,8 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { getTradesByBlockWithOptions } from "@/lib/db";
 import { Trade } from "@/lib/models/trade";
-import { useBlockStore } from "@/lib/stores/block-store";
-import { initializeMockData, generateMockTrades } from "@/lib/stores/mock-data";
+import { generateMockTrades } from "@/lib/stores/mock-data";
 import { cn } from "@/lib/utils";
 
 export default function PlCalendarPage() {
@@ -110,6 +109,8 @@ function PlCalendarPageContent() {
 
       setIsLoadingData(true);
       try {
+        // Dynamic import to prevent SSR issues
+        const { getTradesByBlockWithOptions } = await import("@/lib/db");
         const fetchedTrades = await getTradesByBlockWithOptions(activeBlock.id);
         setTrades(fetchedTrades);
       } catch (error) {
@@ -124,6 +125,15 @@ function PlCalendarPageContent() {
 
     fetchData();
   }, [activeBlock]);
+
+  // Show loading state while initializing
+  if (!isInitialized) {
+    return (
+      <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
+        <p className="text-muted-foreground">Initializing calendar...</p>
+      </div>
+    );
+  }
 
   if (!activeBlock) {
     return <NoActiveBlock />;
