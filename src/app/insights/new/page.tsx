@@ -119,8 +119,31 @@ export default function NewInsightPage() {
 
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (!selectedWeek) return;
+              
+              const fundSlug = "original";
+              let fundStats = "Data unavailable";
+
+              try {
+                // Fetch real metrics on client
+                // Note: calling /api implementation directly via relative path
+                const { getFundPerformance } = await import("@/lib/data/fundData");
+                const { computeFundMetricsFromPerfSeries } = await import("@/lib/metrics/fundMetrics");
+                const { fmtPct, fmtNum } = await import("@/lib/metrics/format");
+
+                const perf = await getFundPerformance({ slug: fundSlug, range: "1Y" });
+                const m = computeFundMetricsFromPerfSeries({ series: perf });
+                
+                const ann = fmtPct(m.performance.annualized_return_pct, 1);
+                const mdd = fmtPct(m.risk.max_drawdown_pct, 1);
+                const vol = fmtPct(m.risk.annualized_volatility_pct, 1);
+                const sharpe = fmtNum(m.risk_adjusted.sharpe_ratio, 2);
+                
+                fundStats = `Ann ${ann}, MaxDD ${mdd}, Vol ${vol}, Sharpe ${sharpe}`;
+              } catch (e) {
+                console.error("Failed to fetch fund stats for draft", e);
+              }
 
               const draft = generateWeeklyDraftFromMetrics({
                 dateISO: selectedWeek.weekStartISO,
@@ -131,7 +154,7 @@ export default function NewInsightPage() {
                 trades: selectedWeek.trades,
                 greenDays: selectedWeek.greenDays,
                 redDays: selectedWeek.redDays,
-                fundSlug: "original", // Defaulting to original for now
+                fundStats,
               });
 
               setTitle(draft.title);

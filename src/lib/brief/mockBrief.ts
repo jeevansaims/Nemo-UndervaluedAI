@@ -1,6 +1,6 @@
 import { computeFundMetricsFromPerfSeries } from "@/lib/metrics/fundMetrics";
 import { fmtPct, fmtNum } from "@/lib/metrics/format";
-import { getPerfSeries } from "@/lib/funds/mockPerformance";
+// Removed getPerfSeries import
 
 export type BriefBlock = {
   title: string;
@@ -15,30 +15,38 @@ export type DailyBrief = {
   topTickers: { ticker: string; note: string }[];
 };
 
-export function buildMockBrief(): DailyBrief {
+export type BriefMetrics = {
+  systematic: any; // Result of computeFundMetricsFromPerfSeries
+  spxDaily: any;
+};
+
+export function buildMockBrief(metrics?: BriefMetrics): DailyBrief {
   const now = new Date();
   const dateISO = now.toISOString().slice(0, 10);
 
-  // Compute metrics for both funds
-  const m1 = computeFundMetricsFromPerfSeries({ series: getPerfSeries("original") });
-  const m2 = computeFundMetricsFromPerfSeries({ series: getPerfSeries("spx-daily") }); // Used 'spx-daily' based on mockFunds data, previous prompt said 'sp500' but mockFunds has 'spx-daily'
+  let fundBlocks: BriefBlock[] = [];
 
-  const fundBlocks = [
-    {
-      title: "Fund snapshot: Systematic",
-      bullets: [
-        `Ann: ${fmtPct(m1.performance.annualized_return_pct, 1)} • MaxDD: ${fmtPct(m1.risk.max_drawdown_pct, 1)} • Sharpe: ${fmtNum(m1.risk_adjusted.sharpe_ratio, 2)}`,
-        `Vol: ${fmtPct(m1.risk.annualized_volatility_pct, 1)} • Beta: ${fmtNum(m1.relative_to_benchmark.beta, 2)} • Alpha: ${fmtPct(m1.relative_to_benchmark.alpha_annualized_pct, 1)}`,
-      ],
-    },
-    {
-      title: "Fund snapshot: SPX Daily",
-      bullets: [
-        `Ann: ${fmtPct(m2.performance.annualized_return_pct, 1)} • MaxDD: ${fmtPct(m2.risk.max_drawdown_pct, 1)} • Sharpe: ${fmtNum(m2.risk_adjusted.sharpe_ratio, 2)}`,
-        `Vol: ${fmtPct(m2.risk.annualized_volatility_pct, 1)} • Beta: ${fmtNum(m2.relative_to_benchmark.beta, 2)} • Alpha: ${fmtPct(m2.relative_to_benchmark.alpha_annualized_pct, 1)}`,
-      ],
-    },
-  ];
+  if (metrics) {
+    const m1 = metrics.systematic;
+    const m2 = metrics.spxDaily;
+    
+    fundBlocks = [
+      {
+        title: "Fund snapshot: Systematic",
+        bullets: [
+          `Ann: ${fmtPct(m1.performance.annualized_return_pct, 1)} • MaxDD: ${fmtPct(m1.risk.max_drawdown_pct, 1)} • Sharpe: ${fmtNum(m1.risk_adjusted.sharpe_ratio, 2)}`,
+          `Vol: ${fmtPct(m1.risk.annualized_volatility_pct, 1)} • Beta: ${fmtNum(m1.relative_to_benchmark.beta, 2)} • Alpha: ${fmtPct(m1.relative_to_benchmark.alpha_annualized_pct, 1)}`,
+        ],
+      },
+      {
+        title: "Fund snapshot: SPX Daily",
+        bullets: [
+          `Ann: ${fmtPct(m2.performance.annualized_return_pct, 1)} • MaxDD: ${fmtPct(m2.risk.max_drawdown_pct, 1)} • Sharpe: ${fmtNum(m2.risk_adjusted.sharpe_ratio, 2)}`,
+          `Vol: ${fmtPct(m2.risk.annualized_volatility_pct, 1)} • Beta: ${fmtNum(m2.relative_to_benchmark.beta, 2)} • Alpha: ${fmtPct(m2.relative_to_benchmark.alpha_annualized_pct, 1)}`,
+        ],
+      },
+    ];
+  }
 
   return {
     dateISO,

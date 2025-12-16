@@ -1,6 +1,4 @@
-import { getPerfSeries } from "@/lib/funds/mockPerformance"; // Using getPerfSeries instead of getFundPerfSeries as seen in prev code
-import { computeFundMetricsFromPerfSeries } from "@/lib/metrics/fundMetrics";
-import { fmtPct, fmtNum } from "@/lib/metrics/format";
+
 
 export type WeeklyMetricsInput = {
   dateISO: string;         // date for title (we'll pass weekStartISO)
@@ -11,7 +9,7 @@ export type WeeklyMetricsInput = {
   trades: number;
   greenDays: number;
   redDays: number;
-  fundSlug: string;        // Added for metrics lookup
+  fundStats: string;       // Pre-computed stats string
 };
 
 function prettyDate(dateISO: string) {
@@ -22,20 +20,6 @@ function prettyDate(dateISO: string) {
 function money(n: number) {
   const sign = n > 0 ? "+" : "";
   return `${sign}$${Math.abs(n).toLocaleString()}`;
-}
-
-function fundMetricsSnippet(fundSlug: string) {
-  const series = getPerfSeries(fundSlug);
-  const m = computeFundMetricsFromPerfSeries({ series });
-
-  const ann = fmtPct(m.performance.annualized_return_pct, 1);
-  const mdd = fmtPct(m.risk.max_drawdown_pct, 1);
-  const vol = fmtPct(m.risk.annualized_volatility_pct, 1);
-  const sharpe = fmtNum(m.risk_adjusted.sharpe_ratio, 2);
-  const beta = fmtNum(m.relative_to_benchmark.beta, 2);
-  const alpha = fmtPct(m.relative_to_benchmark.alpha_annualized_pct, 1);
-
-  return `Ann ${ann}, MaxDD ${mdd}, Vol ${vol}, Sharpe ${sharpe}, Beta ${beta}, Alpha ${alpha}`;
 }
 
 
@@ -53,7 +37,7 @@ export function generateWeeklyDraftFromMetrics(input: WeeklyMetricsInput) {
 
   const tags = "Macro, Volatility, Risk";
 
-  const metricsLine = fundMetricsSnippet(input.fundSlug);
+  const metricsLine = input.fundStats;
 
   const body = [
     `This note summarizes observable market conditions and the portfolio’s week-level outcome. It is designed for transparency and education, not trade instruction.`,

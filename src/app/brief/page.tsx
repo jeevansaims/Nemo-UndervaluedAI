@@ -2,9 +2,29 @@ import Link from "next/link";
 import BriefSection from "@/components/brief/BriefSection";
 import EmailCapture from "@/components/brief/EmailCapture";
 import { buildMockBrief } from "@/lib/brief/mockBrief";
+import { getFundPerformance } from "@/lib/data/fundData";
+import { computeFundMetricsFromPerfSeries } from "@/lib/metrics/fundMetrics";
 
-export default function BriefPage() {
-  const brief = buildMockBrief();
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+export default async function BriefPage() {
+  let metrics = undefined;
+  
+  try {
+     const [perf1, perf2] = await Promise.all([
+       getFundPerformance({ slug: "original", range: "1Y", baseUrl: BASE_URL }),
+       getFundPerformance({ slug: "spx-daily", range: "1Y", baseUrl: BASE_URL })
+     ]);
+     
+     metrics = {
+       systematic: computeFundMetricsFromPerfSeries({ series: perf1 }),
+       spxDaily: computeFundMetricsFromPerfSeries({ series: perf2 })
+     };
+  } catch (e) {
+    console.error("Failed to load brief metrics", e);
+  }
+
+  const brief = buildMockBrief(metrics);
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
