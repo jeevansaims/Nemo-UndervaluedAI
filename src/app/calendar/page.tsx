@@ -5,7 +5,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import DayCell from "@/components/calendar/DayCell";
 import DayModal from "@/components/calendar/DayModal";
-import PublicModeToggle from "@/components/ui/PublicModeToggle";
+
 import { FUNDS, MOCK_DAILY, type DailyPnl } from "@/lib/calendar/mockDaily";
 import { buildMonthGrid, calcMonthStats, filterDailyByFund, formatYYYYMM, getDayByIso, parseYYYYMM } from "@/lib/calendar/calendarUtils";
 import { getPublicMode } from "@/lib/ui/uiStore";
@@ -60,8 +60,8 @@ export default function CalendarPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
-      <div className="mx-auto max-w-6xl px-6 py-10">
+    <main className="">
+      <div className="max-w-6xl px-6 py-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">P/L Calendar</h1>
@@ -71,7 +71,7 @@ export default function CalendarPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <PublicModeToggle />
+            {/* Toggle moved to sidebar */}
             
             <select
               value={fund}

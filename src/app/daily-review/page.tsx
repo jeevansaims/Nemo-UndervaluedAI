@@ -3,7 +3,7 @@
 import { MOCK_DAILY } from "@/lib/calendar/mockDaily";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import PublicModeToggle from "@/components/ui/PublicModeToggle";
+
 import { getPublicMode } from "@/lib/ui/uiStore";
 import { fmtMoneyMaybe } from "@/lib/ui/format";
 
@@ -23,8 +23,8 @@ export default function DailyReviewPage() {
   const sorted = [...MOCK_DAILY].sort((a, b) => (a.date < b.date ? 1 : -1));
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
-      <div className="mx-auto max-w-6xl px-6 py-10">
+    <main className="">
+      <div className="max-w-6xl px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
             <Link href="/" className="text-sm text-white/50 hover:text-white">
@@ -32,7 +32,7 @@ export default function DailyReviewPage() {
             </Link>
             <h1 className="mt-2 text-3xl font-bold">Daily Performance Review</h1>
           </div>
-          <PublicModeToggle />
+          {/* Toggle moved to sidebar */}
         </div>
 
         <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/5">

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
-      <div className="mx-auto max-w-5xl px-6 py-12">
+      <div className="max-w-5xl px-6 py-12">
         <div className="text-xs text-white/50">Nemo-UndervaluedAI</div>
         <h1 className="mt-2 text-4xl font-semibold tracking-tight">
           NemoTrades Performance Dashboard
