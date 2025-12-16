@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import type { InsightPost } from "@/lib/insights/mockInsights";
 import { addCustomInsight } from "@/lib/insights/insightStore";
 import { buildExcerpt, slugify } from "@/lib/insights/insightHelpers";
-import { generateWeeklyDraft } from "@/lib/insights/draftGenerator";
+import { generateWeeklyDraftFromMetrics } from "@/lib/insights/draftGenerator";
+import { MOCK_DAILY, FUNDS } from "@/lib/calendar/mockDaily";
+import { filterDailyByFund } from "@/lib/calendar/calendarUtils";
+import { buildWeeklyReviews } from "@/lib/review/reviewUtils";
 import Link from "next/link";
 
 export default function NewInsightPage() {
@@ -17,6 +20,26 @@ export default function NewInsightPage() {
   const [body, setBody] = useState(
     "Write your weekly note here.\n\nKeep it high-level. No signals. No trade instructions."
   );
+
+  const [fundFilter, setFundFilter] = useState<string>("All Funds");
+  const [weekStartISO, setWeekStartISO] = useState<string>("");
+
+  const weeklyReviews = useMemo(() => {
+    const filtered = filterDailyByFund(MOCK_DAILY, fundFilter);
+    return buildWeeklyReviews(filtered);
+  }, [fundFilter]);
+
+  const selectedWeek = useMemo(() => {
+    if (!weekStartISO) return weeklyReviews[0];
+    return weeklyReviews.find((w) => w.weekStartISO === weekStartISO) ?? weeklyReviews[0];
+  }, [weekStartISO, weeklyReviews]);
+
+  useMemo(() => {
+    if (!weekStartISO && weeklyReviews.length > 0) {
+      setWeekStartISO(weeklyReviews[0].weekStartISO);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weeklyReviews]);
 
   const computedSlug = useMemo(() => slugify(title || "weekly-note"), [title]);
 
@@ -58,6 +81,63 @@ export default function NewInsightPage() {
         </p>
 
         <div className="mt-6 space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs text-white/50">Fund (for metrics)</div>
+              <select
+                value={fundFilter}
+                onChange={(e) => setFundFilter(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-neutral-950 px-3 py-2 text-sm"
+              >
+                {FUNDS.map((f) => (
+                  <option key={f} value={f} className="bg-neutral-950">
+                    {f}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs text-white/50">Week</div>
+              <select
+                value={weekStartISO}
+                onChange={(e) => setWeekStartISO(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-neutral-950 px-3 py-2 text-sm"
+              >
+                {weeklyReviews.map((w) => (
+                  <option key={w.weekStartISO} value={w.weekStartISO} className="bg-neutral-950">
+                    {w.weekLabel}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!selectedWeek) return;
+
+              const draft = generateWeeklyDraftFromMetrics({
+                dateISO: selectedWeek.weekStartISO,
+                fundName: fundFilter,
+                weekLabel: selectedWeek.weekLabel,
+                weeklyPnl: selectedWeek.totalPnl,
+                weeklyRomPct: selectedWeek.romPct,
+                trades: selectedWeek.trades,
+                greenDays: selectedWeek.greenDays,
+                redDays: selectedWeek.redDays,
+              });
+
+              setTitle(draft.title);
+              setTags(draft.tags);
+              setBody(draft.body);
+            }}
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold hover:bg-white/10"
+          >
+            Generate Draft (from weekly review)
+          </button>
+
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs text-white/50">Title</div>
             <input
@@ -104,17 +184,6 @@ export default function NewInsightPage() {
           </div>
 
           <button
-            type="button"
-            onClick={() => {
-              const draft = generateWeeklyDraft({
-                dateISO: date,
-                fundName: "Nemo Systematic Fund",
-                weeklyPnl: 1250,
-                weeklyRomPct: 1.25,
-                greenDays: 4,
-                redDays: 1,
-              });
-
               setTitle(draft.title);
               setTags(draft.tags);
               setBody(draft.body);

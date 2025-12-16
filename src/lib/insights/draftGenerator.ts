@@ -1,10 +1,12 @@
-type DraftInput = {
-  dateISO: string;               // YYYY-MM-DD
-  fundName?: string;             // optional
-  weeklyPnl?: number;            // optional
-  weeklyRomPct?: number;         // optional
-  greenDays?: number;            // optional
-  redDays?: number;              // optional
+export type WeeklyMetricsInput = {
+  dateISO: string;         // date for title (we'll pass weekStartISO)
+  fundName: string;        // chosen fund filter
+  weekLabel: string;
+  weeklyPnl: number;
+  weeklyRomPct: number;
+  trades: number;
+  greenDays: number;
+  redDays: number;
 };
 
 function prettyDate(dateISO: string) {
@@ -17,7 +19,7 @@ function money(n: number) {
   return `${sign}$${Math.abs(n).toLocaleString()}`;
 }
 
-export function generateWeeklyDraft(input: DraftInput) {
+export function generateWeeklyDraftFromMetrics(input: WeeklyMetricsInput) {
   const d = prettyDate(input.dateISO);
 
   const titleOptions = [
@@ -27,25 +29,33 @@ export function generateWeeklyDraft(input: DraftInput) {
     "Macro Crosscurrents and Market Structure",
   ];
 
-  const title = `${titleOptions[Math.floor(Math.random() * titleOptions.length)]} — Week of ${d}`;
+  const title = `${titleOptions[Math.floor(Math.random() * titleOptions.length)]} — ${input.weekLabel}`;
 
   const tags = "Macro, Volatility, Risk";
 
-  const perfBlock =
-    input.weeklyPnl !== undefined
-      ? `**Performance snapshot (illustrative):**\n- Weekly P/L: ${money(input.weeklyPnl)}\n- Weekly ROM: ${(input.weeklyRomPct ?? 0).toFixed(2)}%\n- Green/Red days: ${input.greenDays ?? 0}/${input.redDays ?? 0}\n`
-      : `**Performance snapshot (illustrative):**\n- Weekly P/L: (placeholder)\n- Weekly ROM: (placeholder)\n- Green/Red days: (placeholder)\n`;
-
-  const fundLine = input.fundName ? `**Fund:** ${input.fundName}\n` : "";
-
   const body = [
-    `This week’s market action reflected a mixed regime: localized strength in index-level pricing while participation and dispersion suggested selective risk-taking.`,
-    `We monitor regime signals rather than headlines. When correlations rise and breadth narrows, the priority shifts to controlling drawdowns and maintaining consistent execution.`,
-    perfBlock + fundLine,
-    `**What we watched:**\n- Breadth and leadership rotation\n- Rates and real yield sensitivity\n- Volatility clustering and correlation shifts\n- Liquidity proxies (credit, funding, cross-asset moves)\n`,
-    `**How we think about it (high-level):**\nThe goal is not to predict daily direction. It’s to ensure the portfolio behaves well across regimes, with controlled risk and minimal reliance on one factor or one environment.\n`,
+    `This note summarizes observable market conditions and the portfolio’s week-level outcome. It is designed for transparency and education, not trade instruction.`,
+    ``,
+    `**Reporting scope:** ${input.fundName}`,
+    `**Week:** ${input.weekLabel}`,
+    ``,
+    `**Performance snapshot:**`,
+    `- Weekly P/L: ${money(input.weeklyPnl)}`,
+    `- Weekly ROM: ${input.weeklyRomPct.toFixed(2)}%`,
+    `- Trades: ${input.trades}`,
+    `- Green/Red days: ${input.greenDays}/${input.redDays}`,
+    ``,
+    `**Market structure (high-level):**`,
+    `- Monitor breadth and leadership rotation`,
+    `- Watch rate sensitivity / real yield pressure`,
+    `- Track volatility clustering and correlation shifts`,
+    `- Use liquidity proxies to avoid regime blind spots`,
+    ``,
+    `**Risk framing:**`,
+    `The goal is consistency and drawdown control across regimes, rather than maximizing a single-week outcome.`,
+    ``,
     `**Disclaimer:** This is informational and educational only. It is not investment advice and does not recommend buying or selling any security.`,
-  ].join("\n\n");
+  ].join("\n");
 
   return { title, tags, body };
 }
