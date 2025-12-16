@@ -1,3 +1,5 @@
+"use client";
+
 import { MOCK_DAILY } from "@/lib/calendar/mockDaily";
 import { buildWeeklyReviews } from "@/lib/review/reviewUtils";
 import Link from "next/link";

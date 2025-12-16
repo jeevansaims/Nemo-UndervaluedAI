@@ -188,9 +188,13 @@ export default function NewInsightPage() {
           </div>
 
           <button
-              setTitle(draft.title);
-              setTags(draft.tags);
-              setBody(draft.body);
+            onClick={() => {
+              // Simple template logic if needed, or just dummy text
+              setTitle("Top of Mind: Volatility Contraction");
+              setTags("Volatility, VIX, Hedging");
+              setBody(
+                "Markets are entering a period of compression...\n\nImplied volatility is crushing, suggesting outcomes are narrower than expected."
+              );
             }}
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold hover:bg-white/10"
           >

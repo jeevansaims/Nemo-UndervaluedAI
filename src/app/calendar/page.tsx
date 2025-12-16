@@ -1,4 +1,3 @@
-```
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -103,7 +102,8 @@ export default function CalendarPage() {
 
         {/* Monthly Summary */}
         <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <div className="flex items-baseline gap-1">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-baseline gap-1">
           <div className="text-sm font-semibold text-white/40">Total P/L</div>
           <div
             className={`text-xl font-bold ${

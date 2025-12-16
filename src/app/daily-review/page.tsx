@@ -1,3 +1,5 @@
+"use client";
+
 import { MOCK_DAILY } from "@/lib/calendar/mockDaily";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -42,7 +44,6 @@ export default function DailyReviewPage() {
                 <th className="px-6 py-4 font-semibold text-right">Net P/L</th>
                 <th className="px-6 py-4 font-semibold text-right">Trades</th>
                 <th className="px-6 py-4 font-semibold text-right">Win %</th>
-                <th className="px-6 py-4 font-semibold">Notes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -60,9 +61,6 @@ export default function DailyReviewPage() {
                   <td className="px-6 py-4 text-right text-white/80">{day.trades}</td>
                   <td className="px-6 py-4 text-right text-white/80">
                     {day.winRatePct.toFixed(0)}%
-                  </td>
-                  <td className="px-6 py-4 text-white/40 italic">
-                    {day.notes || "—"}
                   </td>
                 </tr>
               ))}

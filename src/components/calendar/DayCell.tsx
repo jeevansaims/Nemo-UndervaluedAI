@@ -1,20 +1,17 @@
-import { useRef } from "react";
-import type { DailyPnl } from "@/lib/calendar/mockDaily";
-import { fmtMoneyMaybe, fmtPct } from "@/lib/ui/format";
+import { fmtMoneyMaybe } from "@/lib/ui/format";
+import type { CalendarCell } from "@/lib/calendar/calendarUtils";
 
 type DayCellProps = {
-  day: DailyPnl | null;
-  className?: string;
-  onClick?: (day: DailyPnl) => void;
+  cell: CalendarCell;
+  onClick: (iso: string) => void;
   isPublic?: boolean;
 };
 
-export default function DayCell({ day, onClick, className, isPublic = false }: DayCellProps) {
-  const isPositive = day.pnl >= 0;
-  const pnlStr = fmtMoneyMaybe(day.pnl, !!isPublic);
-  const romStr = fmtPct(day.romPct);
-  const pnl = day?.pnl ?? null;
-
+export default function DayCell({ cell, onClick, isPublic = false }: DayCellProps) {
+  const pnl = cell.data?.pnl ?? null;
+  const isPositive = pnl !== null && pnl >= 0;
+  
+  // Basic color logic
   const bg =
     pnl === null
       ? "bg-white/0"
@@ -45,7 +42,7 @@ export default function DayCell({ day, onClick, className, isPublic = false }: D
   return (
     <button
       onClick={() => onClick(cell.isoDate)}
-      className={`w-full text-left rounded-2xl border ${border} ${bg} p-3 hover:bg-white/10 transition`}
+      className={`w-full text-left rounded-2xl border ${border} ${bg} p-3 hover:bg-white/10 transition group relative`}
     >
       <div className="flex items-center justify-between">
         <div className={`text-xs ${cell.inMonth ? "text-white/60" : "text-white/25"}`}>
@@ -57,7 +54,7 @@ export default function DayCell({ day, onClick, className, isPublic = false }: D
       </div>
 
       <div className={`mt-3 text-sm font-semibold ${text}`}>
-        {pnl === null ? "—" : money(pnl)}
+        {pnl === null ? "—" : fmtMoneyMaybe(pnl, isPublic)}
       </div>
 
       {cell.data?.winRatePct ? (
