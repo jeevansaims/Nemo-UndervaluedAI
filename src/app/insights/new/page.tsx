@@ -131,6 +131,7 @@ export default function NewInsightPage() {
                 trades: selectedWeek.trades,
                 greenDays: selectedWeek.greenDays,
                 redDays: selectedWeek.redDays,
+                fundSlug: "original", // Defaulting to original for now
               });
 
               setTitle(draft.title);
