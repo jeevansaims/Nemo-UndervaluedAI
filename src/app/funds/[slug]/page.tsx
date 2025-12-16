@@ -6,21 +6,27 @@ import { getFundBySlug } from "@/lib/funds/mockFunds";
 import { MOCK_POSITIONS, MOCK_CASH, MOCK_TRADES } from "@/lib/funds/mockFundDetail";
 import PortfolioTable from "@/components/funds/PortfolioTable";
 import TradeHistory from "@/components/funds/TradeHistory";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getPublicMode } from "@/lib/ui/uiStore";
 import { use } from "react";
 
 import LastSessionCard from "@/components/funds/LastSessionCard";
 import PerformanceChart from "@/components/funds/PerformanceChart";
 import { getPerfSeries } from "@/lib/funds/mockPerformance";
+import { computeFundMetricsFromPerfSeries } from "@/lib/metrics/fundMetrics";
 
-const fmt = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
+const fmt = (n: number) => `${n > 0 ? "+" : ""}${(n * 100).toFixed(1)}%`;
+const fmtDec = (n: number) => n.toFixed(2);
 
 export default function FundDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const fund = getFundBySlug(slug);
   const [isPublic, setIsPublic] = useState(true);
   const perf = getPerfSeries(slug);
+
+  const metrics = useMemo(() => {
+    return computeFundMetricsFromPerfSeries({ series: perf });
+  }, [perf]);
 
   useEffect(() => {
     setIsPublic(getPublicMode());
@@ -39,16 +45,18 @@ export default function FundDetailPage({ params }: { params: Promise<{ slug: str
         <p className="mt-2 text-md text-white/60">{fund.description}</p>
 
         {/* KPIs */}
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <Metric label="Fund Return" value={fmt(fund.fundReturnPct)} />
-          <Metric label="Benchmark" value={fmt(fund.benchmarkReturnPct)} />
-          <Metric label="Excess Return" value={fmt(fund.excessReturnPct)} />
-          <Metric label="Max Drawdown" value={`${fund.maxDrawdownPct}%`} />
+        <div className="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <Metric label="Ann. Return" value={fmt(metrics.performance.annualized_return_pct)} />
+          <Metric label="Ann. Volatility" value={(metrics.risk.annualized_volatility_pct * 100).toFixed(1) + "%"} />
+          <Metric label="Max Drawdown" value={(metrics.risk.max_drawdown_pct * 100).toFixed(1) + "%"} />
+          <Metric label="Sharpe Ratio" value={fmtDec(metrics.risk_adjusted.sharpe_ratio ?? 0)} />
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <Metric label="Win Rate" value={`${fund.winRatePct}%`} />
-          <Metric label="Trades" value={fund.trades.toString()} sub={`${fund.daysActive} days`} />
+        <div className="mt-4 grid gap-4 grid-cols-2 lg:grid-cols-4">
+           <Metric label="Excess Return" value={fmt(metrics.performance.excess_annualized_return_pct)} />
+           <Metric label="Beta" value={fmtDec(metrics.relative_to_benchmark.beta)} />
+           <Metric label="Alpha" value={fmt(metrics.relative_to_benchmark.alpha_annualized_pct)} />
+            <Metric label="Win Rate" value={(metrics.trading_profile.hit_rate_pct * 100).toFixed(0) + "%"} />
         </div>
 
         {/* Last Session Snapshot (Phase 7C) */}
