@@ -1,20 +1,30 @@
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Assuming you have a Dialog component or using standard HTML if not
 import type { DailyPnl } from "@/lib/calendar/mockDaily";
+import { getPublicMode } from "@/lib/ui/uiStore";
+import { fmtMoneyMaybe } from "@/lib/ui/format";
 
-function money(n: number) {
-  const sign = n > 0 ? "+" : "";
-  return `${sign}$${Math.abs(n).toLocaleString()}`;
-}
-
-export default function DayModal({
-  open,
-  onClose,
-  day,
-}: {
-  open: boolean;
+type DayModalProps = {
+  isOpen: boolean;
   onClose: () => void;
-  day?: DailyPnl;
-}) {
-  if (!open) return null;
+  day: DailyPnl | null;
+};
+
+export default function DayModal({ isOpen, onClose, day }: DayModalProps) {
+  const [isPublic, setIsPublic] = useState(true);
+
+  useEffect(() => {
+    setIsPublic(getPublicMode());
+  }, []);
+
+  if (!isOpen || !day) return null;
+
+  const dateStr = new Date(day.date).toLocaleDateString(undefined, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -72,12 +82,16 @@ export default function DayModal({
                   key={idx}
                   className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3"
                 >
-                  <div className="text-sm text-white/70 blur-[5px] select-none">
-                    {it.strategyLabel}
-                  </div>
-                  <div className={`text-sm font-semibold ${it.pnl >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                    {money(it.pnl)}
-                  </div>
+                  <div className="text-3xl font-bold tracking-tight">
+            {fmtMoneyMaybe(day.pnl, isPublic)}
+          </div>
+          <div
+            className={`mt-1 text-sm font-medium ${
+              day.pnl >= 0 ? "text-emerald-400" : "text-rose-400"
+            }`}
+          >
+            {day.pnl >= 0 ? "+" : ""}
+            {day.romPct.toFixed(2)}% ROM               </div>
                 </div>
               ))
             )}

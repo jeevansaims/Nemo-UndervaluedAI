@@ -5,6 +5,7 @@ import InsightCard from "@/components/insights/InsightCard";
 import { MOCK_INSIGHTS, type InsightPost } from "@/lib/insights/mockInsights";
 import { loadCustomInsights } from "@/lib/insights/insightStore";
 import Link from "next/link";
+import PublicModeToggle from "@/components/ui/PublicModeToggle";
 
 export default function InsightsPage() {
   const [custom, setCustom] = useState<InsightPost[]>([]);
@@ -31,12 +32,15 @@ export default function InsightsPage() {
             </p>
           </div>
 
-          <Link
-            href="/insights/new"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
-          >
-            + New post
-          </Link>
+          <div className="flex items-center gap-3">
+             <PublicModeToggle />
+             <Link
+               href="/insights/new"
+               className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
+             >
+               + New post
+             </Link>
+          </div>
         </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-3">

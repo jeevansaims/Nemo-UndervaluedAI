@@ -10,6 +10,7 @@ import { MOCK_DAILY, FUNDS } from "@/lib/calendar/mockDaily";
 import { filterDailyByFund } from "@/lib/calendar/calendarUtils";
 import { buildWeeklyReviews } from "@/lib/review/reviewUtils";
 import Link from "next/link";
+import PublicModeToggle from "@/components/ui/PublicModeToggle";
 
 export default function NewInsightPage() {
   const router = useRouter();
@@ -72,7 +73,10 @@ export default function NewInsightPage() {
           <Link href="/insights" className="text-sm text-white/60">
             ← Back
           </Link>
-          <div className="text-xs text-white/50">Local draft (browser storage)</div>
+          <div className="flex items-center gap-3">
+            <PublicModeToggle />
+            <div className="text-xs text-white/50">Local draft (browser storage)</div>
+          </div>
         </div>
 
         <h1 className="mt-4 text-3xl font-semibold">New weekly post</h1>

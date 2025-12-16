@@ -1,10 +1,16 @@
+```
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import Link from "next/link";
+import { format } from "date-fns";
 import DayCell from "@/components/calendar/DayCell";
 import DayModal from "@/components/calendar/DayModal";
-import { FUNDS, MOCK_DAILY } from "@/lib/calendar/mockDaily";
+import PublicModeToggle from "@/components/ui/PublicModeToggle";
+import { FUNDS, MOCK_DAILY, type DailyPnl } from "@/lib/calendar/mockDaily";
 import { buildMonthGrid, calcMonthStats, filterDailyByFund, formatYYYYMM, getDayByIso, parseYYYYMM } from "@/lib/calendar/calendarUtils";
+import { getPublicMode } from "@/lib/ui/uiStore";
+import { fmtMoneyMaybe } from "@/lib/ui/format";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -20,9 +26,14 @@ function money(n: number) {
 
 export default function CalendarPage() {
   const [yyyymm, setYyyymm] = useState<string>(() => formatYYYYMM(new Date()));
-  const [fund, setFund] = useState<string>("All Funds");
+  const [fund, setFund] = useState("All Funds");
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isPublic, setIsPublic] = useState(true); // Default safe
+
+  useEffect(() => {
+    setIsPublic(getPublicMode());
+  }, []);
 
   const filteredDaily = useMemo(() => filterDailyByFund(MOCK_DAILY, fund), [fund]);
   const grid = useMemo(() => buildMonthGrid(yyyymm, filteredDaily), [yyyymm, filteredDaily]);
@@ -60,14 +71,16 @@ export default function CalendarPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <PublicModeToggle />
+            
             <select
               value={fund}
               onChange={(e) => setFund(e.target.value)}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20"
             >
               {FUNDS.map((f) => (
-                <option key={f} value={f} className="bg-neutral-950">
+                <option key={f} value={f} className="bg-neutral-900">
                   {f}
                 </option>
               ))}
@@ -90,19 +103,23 @@ export default function CalendarPage() {
 
         {/* Monthly Summary */}
         <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-xs text-white/50">Month P/L</div>
-            <div className={`mt-1 text-2xl font-semibold ${stats.totalPnl >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-              {money(stats.totalPnl)}
-            </div>
+          <div className="flex items-baseline gap-1">
+          <div className="text-sm font-semibold text-white/40">Total P/L</div>
+          <div
+            className={`text-xl font-bold ${
+              stats.totalPnl >= 0 ? "text-emerald-400" : "text-rose-400"
+            }`}
+          >
+            {fmtMoneyMaybe(stats.totalPnl, isPublic)}
           </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-xs text-white/50">ROM (proxy)</div>
-            <div className="mt-1 text-2xl font-semibold text-white/90">
-              {stats.romPct >= 0 ? "+" : ""}
-              {stats.romPct.toFixed(2)}%
-            </div>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <div className="text-sm font-semibold text-white/40">ROM</div>
+          <div className="text-xl font-bold text-white">
+            {stats.romPct >= 0 ? "+" : ""}
+            {stats.romPct.toFixed(2)}%
+          </div>
+        </div>
             <div className="mt-1 text-xs text-white/40">Assumes $100k baseline for mock</div>
           </div>
 
@@ -134,6 +151,7 @@ export default function CalendarPage() {
               <DayCell
                 key={cell.isoDate}
                 cell={cell}
+                isPublic={isPublic}
                 onClick={(iso) => {
                   setSelectedIso(iso);
                   setModalOpen(true);

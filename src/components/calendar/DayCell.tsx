@@ -1,12 +1,19 @@
-import type { CalendarCell } from "@/lib/calendar/calendarUtils";
+import { useRef } from "react";
+import type { DailyPnl } from "@/lib/calendar/mockDaily";
+import { fmtMoneyMaybe, fmtPct } from "@/lib/ui/format";
 
-function money(n: number) {
-  const sign = n > 0 ? "+" : "";
-  return `${sign}$${Math.abs(n).toLocaleString()}`;
-}
+type DayCellProps = {
+  day: DailyPnl | null;
+  className?: string;
+  onClick?: (day: DailyPnl) => void;
+  isPublic?: boolean;
+};
 
-export default function DayCell({ cell, onClick }: { cell: CalendarCell; onClick: (iso: string) => void }) {
-  const pnl = cell.data?.pnl ?? null;
+export default function DayCell({ day, onClick, className, isPublic = false }: DayCellProps) {
+  const isPositive = day.pnl >= 0;
+  const pnlStr = fmtMoneyMaybe(day.pnl, !!isPublic);
+  const romStr = fmtPct(day.romPct);
+  const pnl = day?.pnl ?? null;
 
   const bg =
     pnl === null
