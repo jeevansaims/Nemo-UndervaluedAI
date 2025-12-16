@@ -1,10 +1,15 @@
 import AnalysisSection from "@/components/analysis/AnalysisSection";
 import { buildMockAnalysis } from "@/lib/analysis/mockTickerAnalysis";
 import { use } from "react";
+import PriceChart from "@/components/analysis/PriceChart";
+import { buildMockPriceSeries } from "@/lib/analysis/mockPriceSeries";
+import WatchlistButton from "@/components/analysis/WatchlistButton";
+import NewsPanel from "@/components/analysis/NewsPanel";
 
 export default function TickerAnalysisPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = use(params);
   const a = buildMockAnalysis(ticker);
+  const priceSeries = buildMockPriceSeries(a.ticker);
 
   return (
     <main className="">
@@ -17,13 +22,24 @@ export default function TickerAnalysisPage({ params }: { params: Promise<{ ticke
             <div className="mt-1 text-sm text-white/60">{a.name}</div>
           </div>
 
-          <div className="text-xs text-white/50">
-            Updated: {new Date(a.updatedAtISO).toLocaleString()}
+          <div className="flex items-center gap-4">
+             <div className="text-xs text-white/50">
+                Updated: {new Date(a.updatedAtISO).toLocaleString()}
+             </div>
+             <WatchlistButton ticker={a.ticker} />
           </div>
+        </div>
+        
+        <div className="mt-6">
+          <PriceChart series={priceSeries} />
         </div>
 
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/70">
           {a.summary}
+        </div>
+        
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <NewsPanel ticker={a.ticker} />
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
