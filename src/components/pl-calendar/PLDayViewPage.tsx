@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ChevronLeft, Download, MoreVertical } from "lucide-react";
 import type { DailyTrade, DaySummary } from "./DayDetailModal";
+import { useSafeDisplay } from "@/hooks/useSafeDisplay";
 
 interface PLDayViewProps {
   summary: DaySummary;
@@ -48,6 +49,7 @@ const fmtUsd = (v: number) =>
   })}`;
 
 export function PLDayViewPage({ summary, onBack }: PLDayViewProps) {
+  const { safeStrategyName, safeDollarAmount } = useSafeDisplay();
   const [filter, setFilter] = useState<"all" | "wins" | "losses">("all");
   const [sort, setSort] = useState<"pl_desc" | "pl_asc" | "time_desc" | "time_asc">("time_asc");
 
@@ -225,7 +227,7 @@ export function PLDayViewPage({ summary, onBack }: PLDayViewProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="font-semibold text-neutral-100 truncate">
-                                {group.strategy}
+                                {safeStrategyName(group.strategy)}
                               </span>
                               {group.time && (
                                 <span className="text-xs text-neutral-400 flex-shrink-0">
@@ -265,7 +267,7 @@ export function PLDayViewPage({ summary, onBack }: PLDayViewProps) {
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="text-lg font-semibold text-emerald-400">
-                              {fmtCompactUsd(group.totalPL)}
+                              {safeDollarAmount(group.totalPL)}
                             </div>
                           </div>
                         </div>
@@ -293,7 +295,7 @@ export function PLDayViewPage({ summary, onBack }: PLDayViewProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="font-semibold text-neutral-100 truncate">
-                                {group.strategy}
+                                {safeStrategyName(group.strategy)}
                               </span>
                               {group.time && (
                                 <span className="text-xs text-neutral-400 flex-shrink-0">
@@ -340,7 +342,7 @@ export function PLDayViewPage({ summary, onBack }: PLDayViewProps) {
                                   : "text-neutral-300"
                               )}
                             >
-                              {fmtCompactUsd(group.totalPL)}
+                              {safeDollarAmount(group.totalPL)}
                             </div>
                           </div>
                         </div>
@@ -435,7 +437,7 @@ export function PLDayViewPage({ summary, onBack }: PLDayViewProps) {
                     className="border-neutral-800 hover:bg-neutral-900/50 transition-colors"
                   >
                     <TableCell className="text-sm text-neutral-200">
-                      {trade.strategy}
+                      {safeStrategyName(trade.strategy)}
                     </TableCell>
                     <TableCell className="text-xs text-neutral-400 font-mono">
                       {trade.legs}

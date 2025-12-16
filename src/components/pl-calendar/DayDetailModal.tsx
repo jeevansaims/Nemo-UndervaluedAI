@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useSafeDisplay } from "@/hooks/useSafeDisplay";
 
 export interface DailyTrade {
   id?: string | number;
@@ -124,6 +125,7 @@ export function DailyDetailModal({
   summary,
   mode = "day",
 }: DailyDetailModalProps) {
+  const { safeStrategyName, safeDollarAmount } = useSafeDisplay();
   const [filter, setFilter] = useState<"all" | "wins" | "losses">("all");
   const [sort, setSort] = useState<
     "pl_desc" | "pl_asc" | "time_desc" | "time_asc"
@@ -427,8 +429,8 @@ export function DailyDetailModal({
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="font-semibold text-neutral-100 truncate">
-                                    {group.strategy}
+                                <span className="font-semibold text-neutral-100 truncate">
+                                    {safeStrategyName(group.strategy)}
                                   </span>
                                   {group.time && (
                                     <span className="text-xs text-neutral-400 flex-shrink-0">
@@ -475,7 +477,7 @@ export function DailyDetailModal({
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <div className="text-lg font-semibold text-emerald-400">
-                                  {fmtCompactUsd(group.totalPL)}
+                                  {safeDollarAmount(group.totalPL)}
                                 </div>
                               </div>
                             </div>
@@ -502,7 +504,7 @@ export function DailyDetailModal({
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-2">
                                   <span className="font-semibold text-neutral-100 truncate">
-                                    {group.strategy}
+                                    {safeStrategyName(group.strategy)}
                                   </span>
                                   {group.time && (
                                     <span className="text-xs text-neutral-400 flex-shrink-0">
@@ -556,7 +558,7 @@ export function DailyDetailModal({
                                       : "text-neutral-300"
                                   )}
                                 >
-                                  {fmtCompactUsd(group.totalPL)}
+                                  {safeDollarAmount(group.totalPL)}
                                 </div>
                               </div>
                             </div>
@@ -720,7 +722,7 @@ export function DailyDetailModal({
                                 {/* Strategy */}
                                 <TableCell className="text-xs">
                                   <span className="inline-flex items-center rounded-full bg-neutral-900 px-2 py-[2px] text-[11px] font-medium text-neutral-200">
-                                    {strategyLabel}
+                                    {safeStrategyName(strategyLabel)}
                                   </span>
                                 </TableCell>
 

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 import { useMemo } from "react";
 import { DailyTrade } from "./DayDetailModal";
+import { useSafeDisplay } from "@/hooks/useSafeDisplay";
 
 interface TradeCardProps {
   strategy: string;
@@ -39,6 +40,7 @@ function TradeCard({
   romPct,
   onClick,
 }: TradeCardProps) {
+  const { safeStrategyName, safeDollarAmount } = useSafeDisplay();
   const tradeCount = trades.length;
 
   return (
@@ -52,7 +54,7 @@ function TradeCard({
             {/* Strategy name row */}
             <div className="flex items-center gap-2 mb-3">
               <span className="font-semibold truncate text-neutral-100">
-                {strategy}
+                {safeStrategyName(strategy)}
               </span>
               {time && (
                 <span className="text-xs text-neutral-400 flex-shrink-0">
@@ -81,7 +83,7 @@ function TradeCard({
                     pl === 0 && "text-neutral-300"
                   )}
                 >
-                  {formatCurrency(pl)}
+                  {safeDollarAmount(pl)}
                 </span>
               </div>
 
