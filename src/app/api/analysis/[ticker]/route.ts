@@ -2,35 +2,16 @@ import { NextResponse } from "next/server";
 import { finnhubGet } from "@/lib/market/finnhub";
 import { rangeToFromTo, rangeToResolution, type RangeKey } from "@/lib/market/timeRange";
 import { computeRiskFromCloses } from "@/lib/analysis/riskFromCandles";
-
-type FinnhubProfile2 = {
-  name?: string;
-  ticker?: string;
-  exchange?: string;
-  ipo?: string;
-  marketCapitalization?: number;
-  shareOutstanding?: number;
-  logo?: string;
-  finnhubIndustry?: string;
-  country?: string;
-  currency?: string;
-  weburl?: string;
-};
-
-type FinnhubQuote = {
-  c: number; d: number; dp: number; h: number; l: number; o: number; pc: number; t: number;
-};
-
-type FinnhubCandles = {
-  c: number[];
-  t: number[];
-  s: "ok" | "no_data";
-};
-
-type FinnhubBasicFinancials = {
-  metric?: Record<string, number | string | null>;
-  series?: unknown;
-};
+import {
+  FinnhubProfile2Schema,
+  FinnhubQuoteSchema,
+  FinnhubCandlesSchema,
+  FinnhubBasicFinancialsSchema,
+  type FinnhubProfile2,
+  type FinnhubQuote,
+  type FinnhubCandles,
+  type FinnhubBasicFinancials
+} from "@/lib/validators/finnhub";
 
 function isoDateFromUnix(ts: number): string {
   return new Date(ts * 1000).toISOString().slice(0, 10);
@@ -48,13 +29,18 @@ export async function GET(req: Request, ctx: { params: Promise<{ ticker: string 
   const resolution = rangeToResolution(range);
 
   try {
+    const start = Date.now();
+    
     // Run in parallel for speed
     const [profile, quote, candles, financials] = await Promise.all([
-      finnhubGet<FinnhubProfile2>("/stock/profile2", { symbol: ticker }),
-      finnhubGet<FinnhubQuote>("/quote", { symbol: ticker }),
-      finnhubGet<FinnhubCandles>("/stock/candle", { symbol: ticker, resolution, from, to }),
-      finnhubGet<FinnhubBasicFinancials>("/stock/metric", { symbol: ticker, metric: "all" }),
+      finnhubGet<FinnhubProfile2>("/stock/profile2", { symbol: ticker }, FinnhubProfile2Schema),
+      finnhubGet<FinnhubQuote>("/quote", { symbol: ticker }, FinnhubQuoteSchema),
+      finnhubGet<FinnhubCandles>("/stock/candle", { symbol: ticker, resolution, from, to }, FinnhubCandlesSchema),
+      finnhubGet<FinnhubBasicFinancials>("/stock/metric", { symbol: ticker, metric: "all" }, FinnhubBasicFinancialsSchema),
     ]);
+    
+    // Observability (Phase 8D-4)
+    console.log(`[API] Analysis ${ticker} ${range} took ${Date.now() - start}ms`);
 
     const points =
       candles.s === "ok" && candles.t?.length
