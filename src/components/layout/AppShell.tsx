@@ -6,6 +6,7 @@ import StatusBanner from "./StatusBanner";
 import { useState } from "react";
 import { useFreshness } from "@/lib/live/useFreshness";
 import Link from "next/link";
+import TickerSearch from "@/components/analysis/TickerSearch";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,7 +22,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
-        <StatusBanner state={state} ageSec={ageSec} />
+        <div className="sticky top-0 z-20 bg-neutral-950/80 backdrop-blur border-b border-white/5 p-4 flex flex-col gap-4">
+             <StatusBanner state={state} ageSec={ageSec} />
+             <div className="flex items-center justify-between">
+                 <div className="md:hidden">
+                     {/* Mobile Hamburger Placeholder */}
+                     <span className="text-white/50">☰</span>
+                 </div>
+                 <div className="flex-1 max-w-xl mx-auto">
+                     <TickerSearch />
+                 </div>
+             </div>
+        </div>
 
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-white/10 sticky top-0 bg-neutral-950/80 backdrop-blur z-30">
