@@ -117,3 +117,55 @@ model InsightPost {
   @@index([userId, status])
   @@unique([userId, slug])
 }
+
+// Phase 12: Admin Dashboard & Fund Persistence
+model Fund {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  holdings    Holding[]
+  trades      Trade[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Holding {
+  id        String   @id @default(cuid())
+  fundId    String
+  ticker    String
+  name      String?
+  weightPct Float    @default(0)
+  bucket    String?  // Optional override: SMALL, MED, LARGE
+  rationale String?
+  pnl       Float?
+  value     Float?
+  updatedAt DateTime @updatedAt
+  
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@index([fundId])
+  @@unique([fundId, ticker])
+}
+
+enum TradeAction {
+  BUY
+  SELL
+}
+
+model Trade {
+  id        String      @id @default(cuid())
+  fundId    String
+  ticker    String
+  action    TradeAction
+  date      DateTime
+  qty       Float?
+  price     Float?
+  rationale String?
+  createdAt DateTime    @default(now())
+
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@index([fundId])
+  @@index([fundId, date])
+}
