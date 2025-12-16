@@ -19,7 +19,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Trade } from "@/lib/models/trade";
-import { generateMockTrades } from "@/lib/stores/mock-data";
+import { useBlockStore } from "@/lib/stores/block-store";
+import { initializeMockData, generateMockTrades } from "@/lib/stores/mock-data";
 import { cn } from "@/lib/utils";
 
 export default function PlCalendarPage() {
