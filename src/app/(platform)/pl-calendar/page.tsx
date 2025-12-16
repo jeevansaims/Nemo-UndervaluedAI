@@ -20,6 +20,7 @@ import {
 import { getTradesByBlockWithOptions } from "@/lib/db";
 import { Trade } from "@/lib/models/trade";
 import { useBlockStore } from "@/lib/stores/block-store";
+import { initializeMockData, generateMockTrades } from "@/lib/stores/mock-data";
 import { cn } from "@/lib/utils";
 
 export default function PlCalendarPage() {
@@ -50,6 +51,7 @@ function PlCalendarPageContent() {
   });
   const isInitialized = useBlockStore((state) => state.isInitialized);
   const loadBlocks = useBlockStore((state) => state.loadBlocks);
+  const blocks = useBlockStore((state) => state.blocks);
 
   // Load blocks if not initialized
   useEffect(() => {
@@ -57,6 +59,17 @@ function PlCalendarPageContent() {
       loadBlocks().catch(console.error);
     }
   }, [isInitialized, loadBlocks]);
+
+  // Initialize mock data if no blocks exist
+  useEffect(() => {
+    async function initMockDataIfNeeded() {
+      if (isInitialized && blocks.length === 0) {
+        console.log('No blocks found, initializing mock data...');
+        await initializeMockData();
+      }
+    }
+    initMockDataIfNeeded();
+  }, [isInitialized, blocks.length]);
 
   const requestedRange = useMemo(() => {
     if (!searchParams) return undefined;
@@ -100,7 +113,10 @@ function PlCalendarPageContent() {
         const fetchedTrades = await getTradesByBlockWithOptions(activeBlock.id);
         setTrades(fetchedTrades);
       } catch (error) {
-        console.error("Failed to fetch trades:", error);
+        console.error("Failed to fetch trades from DB, using mock data:", error);
+        // Fallback to mock data for demo purposes
+        const mockTrades = generateMockTrades();
+        setTrades(mockTrades);
       } finally {
         setIsLoadingData(false);
       }
