@@ -40,7 +40,39 @@ export const FinnhubBasicFinancialsSchema = z.object({
   series: z.unknown().optional(),
 });
 
+export const FinnhubCompanyNewsSchema = z.array(
+  z.object({
+    category: z.string().optional(),
+    datetime: z.number(),
+    headline: z.string(),
+    id: z.number(),
+    image: z.string().optional(),
+    related: z.string().optional(),
+    source: z.string().optional(),
+    summary: z.string().optional(),
+    url: z.string().optional(),
+  })
+);
+
+export const FinnhubEarningsCalendarSchema = z.object({
+  earningsCalendar: z.array(
+    z.object({
+      date: z.string().optional(),
+      epsActual: z.number().nullable().optional(),
+      epsEstimate: z.number().nullable().optional(),
+      hour: z.string().optional(),
+      quarter: z.number().optional(),
+      revenueActual: z.number().nullable().optional(),
+      revenueEstimate: z.number().nullable().optional(),
+      symbol: z.string().optional(),
+      year: z.number().optional(),
+    })
+  ).optional(),
+});
+
 export type FinnhubProfile2 = z.infer<typeof FinnhubProfile2Schema>;
 export type FinnhubQuote = z.infer<typeof FinnhubQuoteSchema>;
 export type FinnhubCandles = z.infer<typeof FinnhubCandlesSchema>;
 export type FinnhubBasicFinancials = z.infer<typeof FinnhubBasicFinancialsSchema>;
+export type FinnhubCompanyNews = z.infer<typeof FinnhubCompanyNewsSchema>;
+export type FinnhubEarningsCalendar = z.infer<typeof FinnhubEarningsCalendarSchema>;

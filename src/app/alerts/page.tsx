@@ -1,21 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AlertFilters from "@/components/alerts/AlertFilters";
 import AlertCard from "@/components/alerts/AlertCard";
-import { buildMockAlerts, type AlertType } from "@/lib/alerts/mockAlerts";
+import type { AlertItem, AlertType } from "@/lib/alerts/alertSchemas";
 import { loadWatchlist } from "@/lib/analysis/watchlistStore";
 
 export default function AlertsPage() {
   const [active, setActive] = useState<"ALL" | AlertType>("ALL");
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Use watchlist tickers to make alerts feel "personalized"
+  // Load watchlist on mount
   const tickers = useMemo(() => {
-    const wl = typeof window === "undefined" ? [] : loadWatchlist();
-    return wl.length ? wl : ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
+    if (typeof window === "undefined") return [];
+    return loadWatchlist();
   }, []);
 
-  const alerts = useMemo(() => buildMockAlerts(tickers), [tickers]);
+  useEffect(() => {
+    async function fetchAlerts() {
+      setLoading(true);
+      try {
+        const query = tickers.length ? `?tickers=${tickers.join(",")}` : "";
+        const res = await fetch(`/api/alerts${query}`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setAlerts(data.alerts || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAlerts();
+  }, [tickers]);
 
   const filtered = useMemo(() => {
     if (active === "ALL") return alerts;
@@ -27,21 +45,29 @@ export default function AlertsPage() {
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs text-white/50">Monitoring</div>
+            <div className="text-xs text-white/50">Monitoring {tickers.length ? tickers.join(", ") : "Top Market"}</div>
             <h1 className="mt-2 text-3xl font-semibold">Alerts</h1>
             <p className="mt-2 text-sm text-white/60">
-              Local-first alerts feed (mock). No trade instructions. Not investment advice.
+              Real-time feed from Finnhub (News, Earnings).
             </p>
           </div>
 
           <AlertFilters active={active} onChange={setActive} />
         </div>
 
-        <div className="mt-8 grid gap-4">
-          {filtered.map((a) => (
-            <AlertCard key={a.id} a={a} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="mt-12 text-center text-white/40">Loading latest signals...</div>
+        ) : (
+          <div className="mt-8 grid gap-4">
+            {filtered.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-white/10 p-10 text-center text-white/40">
+                No alerts found. Try adding more tickers to your watchlist.
+              </div>
+            ) : (
+              filtered.map((a) => <AlertCard key={a.id} a={a} />)
+            )}
+          </div>
+        )}
       </div>
     </main>
   );

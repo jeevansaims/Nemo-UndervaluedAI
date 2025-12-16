@@ -1,6 +1,6 @@
 "use client";
 
-import type { AlertType } from "@/lib/alerts/mockAlerts";
+import type { AlertType } from "@/lib/alerts/alertSchemas";
 
 export default function AlertFilters({
   active,
@@ -9,7 +9,7 @@ export default function AlertFilters({
   active: "ALL" | AlertType;
   onChange: (v: "ALL" | AlertType) => void;
 }) {
-  const tabs: Array<"ALL" | AlertType> = ["ALL", "INSIDER", "EARNINGS", "MACRO", "SYSTEM"];
+  const tabs: Array<"ALL" | AlertType> = ["ALL", "NEWS", "EARNINGS", "INSIDER", "MACRO", "SYSTEM"];
 
   return (
     <div className="flex flex-wrap items-center gap-1 rounded-2xl border border-white/10 bg-white/5 p-1">
