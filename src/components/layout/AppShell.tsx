@@ -3,11 +3,16 @@
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import StatusBanner from "./StatusBanner";
-import Link from "next/link";
 import { useState } from "react";
+import { useFreshness } from "@/lib/live/useFreshness";
+import Link from "next/link";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { ageSec, state } = useFreshness({
+    staleAfterSec: 18,
+    disconnectAfterSec: 60,
+  });
   
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex">
@@ -16,7 +21,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
-        <StatusBanner />
+        <StatusBanner state={state} ageSec={ageSec} />
 
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-white/10 sticky top-0 bg-neutral-950/80 backdrop-blur z-30">

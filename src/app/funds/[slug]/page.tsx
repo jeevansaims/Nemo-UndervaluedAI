@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { getPublicMode } from "@/lib/ui/uiStore";
 import { use } from "react";
 
+import LastSessionCard from "@/components/funds/LastSessionCard";
 import PerformanceChart from "@/components/funds/PerformanceChart";
 import { getPerfSeries } from "@/lib/funds/mockPerformance";
 
@@ -50,30 +51,9 @@ export default function FundDetailPage({ params }: { params: Promise<{ slug: str
           <Metric label="Trades" value={fund.trades.toString()} sub={`${fund.daysActive} days`} />
         </div>
 
-        {/* Last Session Snapshot (Placeholder for Phase 7C) */}
-        <div className="mt-10 rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Last Session</h3>
-            <div className="text-xs font-mono text-emerald-400 animate-pulse">● Live</div>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-8 md:grid-cols-4">
-            <div>
-              <div className="text-xs text-white/50">Date</div>
-              <div className="font-medium">Today</div>
-            </div>
-            <div>
-              <div className="text-xs text-white/50">Daily Return</div>
-              <div className="text-xl font-bold text-emerald-400">+1.24%</div>
-            </div>
-            <div>
-              <div className="text-xs text-white/50">vs S&P 500</div>
-              <div className="text-xl font-bold text-emerald-400">+0.45%</div>
-            </div>
-            <div>
-              <div className="text-xs text-white/50">Vol (Ann)</div>
-              <div className="font-medium">12.5%</div>
-            </div>
-          </div>
+        {/* Last Session Snapshot (Phase 7C) */}
+        <div className="mt-10">
+          <LastSessionCard series={perf} />
         </div>
 
         {/* Performance Chart (Phase 7B) */}
