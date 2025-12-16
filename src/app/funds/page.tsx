@@ -2,6 +2,8 @@ import Link from "next/link";
 import FundCard from "@/components/funds/FundCard";
 import { MOCK_FUNDS } from "@/lib/funds/mockFunds";
 import PublicModeToggle from "@/components/ui/PublicModeToggle";
+import { getPerfSeries } from "@/lib/funds/mockPerformance";
+import { computeFundMetricsFromPerfSeries } from "@/lib/metrics/fundMetrics";
 
 export default function FundsPage() {
   return (
@@ -21,9 +23,11 @@ export default function FundsPage() {
         </p>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {MOCK_FUNDS.map((fund) => (
-            <FundCard key={fund.slug} fund={fund} />
-          ))}
+          {MOCK_FUNDS.map((fund) => {
+             const perf = getPerfSeries(fund.slug);
+             const metrics = computeFundMetricsFromPerfSeries({ series: perf });
+             return <FundCard key={fund.slug} fund={fund} metrics={metrics} />;
+          })}
         </div>
       </div>
     </main>
