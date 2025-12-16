@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { InsightPost } from "@/lib/insights/mockInsights";
-import { addCustomInsight } from "@/lib/insights/insightStore";
+import { useInsights } from "@/lib/insights/useInsights";
 import { buildExcerpt, slugify } from "@/lib/insights/insightHelpers";
 import { generateWeeklyDraftFromMetrics } from "@/lib/insights/draftGenerator";
 import { MOCK_DAILY, FUNDS } from "@/lib/calendar/mockDaily";
@@ -11,9 +11,13 @@ import { filterDailyByFund } from "@/lib/calendar/calendarUtils";
 import { buildWeeklyReviews } from "@/lib/review/reviewUtils";
 import Link from "next/link";
 import PublicModeToggle from "@/components/ui/PublicModeToggle";
+import { useSession } from "next-auth/react";
 
 export default function NewInsightPage() {
   const router = useRouter();
+  const { createInsight } = useInsights();
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -44,26 +48,29 @@ export default function NewInsightPage() {
 
   const computedSlug = useMemo(() => slugify(title || "weekly-note"), [title]);
 
-  function handleCreate() {
+  async function handleCreate() {
     const paragraphs = body
       .split("\n")
       .map((s) => s.trim())
       .filter(Boolean);
+      
+    const contentMd = paragraphs.join("\n\n");
+    
+    // Parse tags to tickers/tags
+    const tagArray = tags.split(",").map(t => t.trim()).filter(Boolean);
 
-    const post: InsightPost = {
-      slug: computedSlug,
-      date,
-      title: title.trim() || "Weekly Note",
-      excerpt: buildExcerpt(paragraphs.join(" ")),
-      body: paragraphs,
-      tags: tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    };
-
-    addCustomInsight(post);
-    router.push(`/insights/${post.slug}`);
+    await createInsight({
+        title: title.trim() || "Weekly Note",
+        slug: computedSlug,
+        status: "DRAFT",
+        contentMd: contentMd,
+        tickers: tagArray,
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        // We could store fundSlug and weekStart too if we extended model props
+    });
+    
+    router.push(`/insights/${computedSlug}`);
   }
 
   return (
@@ -75,7 +82,9 @@ export default function NewInsightPage() {
           </Link>
           <div className="flex items-center gap-3">
             <PublicModeToggle />
-            <div className="text-xs text-white/50">Local draft (browser storage)</div>
+            <div className="text-xs text-white/50">
+                {isAuthenticated ? "Saving to Cloud (Postgres)" : "Local draft (browser storage)"}
+            </div>
           </div>
         </div>
 

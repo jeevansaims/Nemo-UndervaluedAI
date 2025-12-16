@@ -1,98 +1,47 @@
 "use client";
 
-import { Trade } from "@/lib/funds/mockFundDetail";
 import { useState } from "react";
-import { fmtMoneyMaybe } from "@/lib/ui/format";
 
-export default function TradeHistory({
-  trades,
-  isPublic,
-}: {
-  trades: Trade[];
-  isPublic: boolean;
-}) {
-  const [filter, setFilter] = useState<"All" | "Buy" | "Sell">("All");
-
-  const filtered = trades.filter((t) => filter === "All" || t.side === filter);
+export default function TradeHistory({ trades, privateMode }: { trades: any[], privateMode: boolean }) {
+  const showPrivateFields = privateMode;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Trade History</h3>
-        <div className="flex rounded-lg border border-white/10 bg-white/5 p-1">
-          {(["All", "Buy", "Sell"] as const).map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setFilter(opt)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition ${
-                filter === opt
-                  ? "bg-white/10 text-white"
-                  : "text-white/40 hover:text-white"
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {filtered.map((trade) => (
-          <div
-            key={trade.id}
-            className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`rounded-md px-2 py-1 text-xs font-bold uppercase ${
-                    trade.side === "Buy"
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : "bg-rose-500/20 text-rose-400"
-                  }`}
-                >
-                  {trade.side}
-                </div>
-                <div>
-                  <div className="font-bold text-lg">{trade.ticker}</div>
-                  <div className="text-xs text-white/40">{trade.date}</div>
-                </div>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-sm text-white/60">Notional</div>
-                <div className="font-mono text-white">
-                    {fmtMoneyMaybe(trade.amount, isPublic)}
-                </div>
-                {trade.pnl && !isPublic && (
-                   <div className={`text-xs mt-1 ${trade.pnl > 0 ? "text-emerald-400": "text-rose-400"}`}>
-                       {trade.pnl > 0 ? "+" : ""}${trade.pnl.toLocaleString()}
-                   </div> 
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-white/5">
-                <div className="text-xs font-semibold text-white/30 uppercase mb-1">
-                    Strategy Thesis
-                </div>
-                <div className={`text-sm text-white/70 leading-relaxed ${isPublic ? "blur-sm select-none" : ""}`}>
-                    {trade.thesis}
-                </div>
-                {isPublic && (
-                    <div className="text-[10px] text-emerald-400 mt-1 italic">
-                        Hidden in public mode
-                    </div>
-                )}
-            </div>
-          </div>
-        ))}
-        
-        {filtered.length === 0 && (
-            <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/40 text-sm">
-                No trades found for this filter.
-            </div>
-        )}
+    <div className="rounded-xl border border-white/5 bg-white/5 p-6">
+      <h3 className="mb-4 text-xl font-semibold">Recent Trades</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-white/10 text-white/50">
+              <th className="pb-3">Date</th>
+              <th className="pb-3">Ticker</th>
+              <th className="pb-3">Action</th>
+              {showPrivateFields && <th className="pb-3 text-right">Qty</th>}
+              {showPrivateFields && <th className="pb-3 text-right">Price</th>}
+              {showPrivateFields && <th className="pb-3 pl-4">Rationale</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5 text-white/80">
+            {trades.map((t, i) => (
+              <tr key={i}>
+                <td className="py-3 text-white/60">
+                    {new Date(t.ts * 1000).toLocaleDateString()}
+                </td>
+                <td className="py-3 font-medium">{t.ticker}</td>
+                <td className={`py-3 ${t.action === "BUY" ? "text-emerald-400" : "text-rose-400"}`}>
+                  {t.action}
+                </td>
+                {showPrivateFields && <td className="py-3 text-right">{t.qty ?? "—"}</td>}
+                {showPrivateFields && <td className="py-3 text-right">{t.price ? `$${t.price.toFixed(2)}` : "—"}</td>}
+                {showPrivateFields && <td className="py-3 pl-4 text-white/50 max-w-xs truncate" title={t.rationale}>{t.rationale ?? "—"}</td>}
+              </tr>
+            ))}
+             {trades.length === 0 && (
+                <tr>
+                    <td colSpan={6} className="py-4 text-center text-white/40">No trades found.</td>
+                </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

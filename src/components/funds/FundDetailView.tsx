@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getPublicMode } from "@/lib/ui/uiStore";
+import { usePrivateMode } from "@/lib/privacy/privateMode";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Metric from "@/components/funds/Metric";
 import LastSessionCard from "@/components/funds/LastSessionCard";
 import PerformanceChart from "@/components/funds/PerformanceChart";
 import PortfolioTable from "@/components/funds/PortfolioTable";
 import TradeHistory from "@/components/funds/TradeHistory";
-import { MOCK_POSITIONS, MOCK_CASH, MOCK_TRADES } from "@/lib/funds/mockFundDetail";
+import { MOCK_CASH } from "@/lib/funds/mockFundDetail"; // Keeping cash mock for now
 
 const fmt = (n: number) => `${n > 0 ? "+" : ""}${(n * 100).toFixed(1)}%`;
 const fmtDec = (n: number) => n.toFixed(2);
@@ -20,11 +21,34 @@ type FundDetailViewProps = {
 };
 
 export default function FundDetailView({ fund, perf, metrics }: FundDetailViewProps) {
-  const [isPublic, setIsPublic] = useState(true);
+  const { data: session } = useSession();
+  const isAuthed = !!session?.user?.email;
+  const { privateMode } = usePrivateMode({ isAuthed });
+
+  const [holdings, setHoldings] = useState<any[]>([]);
+  const [trades, setTrades] = useState<any[]>([]);
 
   useEffect(() => {
-    setIsPublic(getPublicMode());
-  }, []);
+    // Fetch live data
+    async function fetchData() {
+        try {
+            const hRes = await fetch(`/api/funds/${fund.slug}/holdings`);
+            if (hRes.ok) {
+                const hData = await hRes.json();
+                setHoldings(hData.holdings || []);
+            }
+            
+            const tRes = await fetch(`/api/funds/${fund.slug}/trades`);
+            if (tRes.ok) {
+                const tData = await tRes.json();
+                setTrades(tData.trades || []);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    fetchData();
+  }, [fund.slug, isAuthed]); // re-fetch if auth changes (to get unredacted)
 
   return (
     <main className="">
@@ -61,18 +85,24 @@ export default function FundDetailView({ fund, perf, metrics }: FundDetailViewPr
 
         {/* Portfolio Table */}
         <div className="mt-12">
+          {/* subtle label */}
+          <div className="flex justify-end mb-2">
+              <span className="text-xs text-white/30 uppercase tracking-wider">
+                  {privateMode ? "Authenticated View (Private)" : "Public View (Redacted)"}
+              </span>
+          </div>
           <PortfolioTable 
-            positions={MOCK_POSITIONS} 
+            positions={holdings} 
             cash={MOCK_CASH} 
-            isPublic={isPublic} 
+            privateMode={privateMode} 
           />
         </div>
 
         {/* Trade History */}
         <div className="mt-12">
           <TradeHistory 
-            trades={MOCK_TRADES} 
-            isPublic={isPublic} 
+            trades={trades} 
+            privateMode={privateMode} 
           />
         </div>
       </div>

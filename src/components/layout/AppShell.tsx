@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useFreshness } from "@/lib/live/useFreshness";
 import Link from "next/link";
 import TickerSearch from "@/components/analysis/TickerSearch";
+import PrivateModeToggle from "@/components/PrivateModeToggle";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,8 +30,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                      {/* Mobile Hamburger Placeholder */}
                      <span className="text-white/50">☰</span>
                  </div>
-                 <div className="flex-1 max-w-xl mx-auto">
-                     <TickerSearch />
+                 <div className="flex-1 max-w-xl mx-auto flex items-center gap-4">
+                     <div className="flex-1">
+                         <TickerSearch />
+                     </div>
+                     <PrivateModeToggle />
                  </div>
              </div>
         </div>

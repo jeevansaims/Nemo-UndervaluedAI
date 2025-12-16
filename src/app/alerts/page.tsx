@@ -3,21 +3,30 @@
 import { useEffect, useMemo, useState } from "react";
 import AlertFilters from "@/components/alerts/AlertFilters";
 import AlertCard from "@/components/alerts/AlertCard";
-import type { AlertItem, AlertType } from "@/lib/alerts/alertSchemas";
-import { loadWatchlist } from "@/lib/analysis/watchlistStore";
+import type { AlertItem } from "@/lib/alerts/alertSchemas";
+import { useWatchlist } from "@/lib/watchlist/useWatchlist";
+import { useAlertSettings } from "@/lib/alerts/useAlertSettings";
 
 export default function AlertsPage() {
-  const [active, setActive] = useState<"ALL" | AlertType>("ALL");
+  const { enabledTypes, setTypeFilter } = useAlertSettings();
+  // We still use local state active to control UI immediately, 
+  // but we sync with enabledTypes from hook.
+  // Actually, let's drive it from the hook entirely if possible.
+  // The hook returns 'ALL' or AlertType[]. 
+  // Our UI expects 'active' to be single string.
+  
+  // Let's assume simplest case: One active filter at a time persisted.
+  // Hook enabledTypes is AlertType[] | "ALL" -> we cast to single for UI
+  const active = Array.isArray(enabledTypes) ? enabledTypes[0] : "ALL";
+
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Load watchlist on mount
-  const tickers = useMemo(() => {
-    if (typeof window === "undefined") return [];
-    return loadWatchlist();
-  }, []);
+  
+  const { tickers, loading: watchlistLoading } = useWatchlist();
 
   useEffect(() => {
+    if (watchlistLoading) return;
+
     async function fetchAlerts() {
       setLoading(true);
       try {
@@ -33,7 +42,7 @@ export default function AlertsPage() {
       }
     }
     fetchAlerts();
-  }, [tickers]);
+  }, [tickers, watchlistLoading]);
 
   const filtered = useMemo(() => {
     if (active === "ALL") return alerts;
@@ -52,7 +61,7 @@ export default function AlertsPage() {
             </p>
           </div>
 
-          <AlertFilters active={active} onChange={setActive} />
+          <AlertFilters active={active} onChange={setTypeFilter} />
         </div>
 
         {loading ? (

@@ -2,24 +2,34 @@
 
 import { useEffect, useMemo, useState } from "react";
 import InsightCard from "@/components/insights/InsightCard";
-import { MOCK_INSIGHTS, type InsightPost } from "@/lib/insights/mockInsights";
-import { loadCustomInsights } from "@/lib/insights/insightStore";
-import Link from "next/link";
+import { useInsights, type InsightPost as DBPost } from "@/lib/insights/useInsights";
+import { type InsightPost as MockPost, MOCK_INSIGHTS } from "@/lib/insights/mockInsights";
 import PublicModeToggle from "@/components/ui/PublicModeToggle";
+import Link from "next/link";
+
+// Adapter to unify types
+function mapDBPostToMock(p: DBPost): MockPost {
+    return {
+        slug: p.slug,
+        title: p.title,
+        date: typeof p.createdAt === "string" ? p.createdAt.slice(0, 10) : new Date(p.createdAt).toISOString().slice(0, 10),
+        excerpt: p.contentMd.slice(0, 120) + "...",
+        body: p.contentMd.split("\n\n"),
+        tags: p.tickers // Using tickers as tags for now, or we can add tags to DB model later
+    };
+}
 
 export default function InsightsPage() {
-  const [custom, setCustom] = useState<InsightPost[]>([]);
-
-  useEffect(() => {
-    setCustom(loadCustomInsights());
-  }, []);
-
+  const { posts, loading } = useInsights();
+  
   const allPosts = useMemo(() => {
-    const merged = [...custom, ...MOCK_INSIGHTS];
+    // Map DB posts to the format InsightCard expects
+    const mapped = posts.map(mapDBPostToMock);
+    const merged = [...mapped, ...MOCK_INSIGHTS];
     // newest first
     merged.sort((a, b) => (a.date < b.date ? 1 : -1));
     return merged;
-  }, [custom]);
+  }, [posts]);
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">

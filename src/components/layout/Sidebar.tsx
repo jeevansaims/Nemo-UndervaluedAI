@@ -1,5 +1,7 @@
 "use client";
 
+import { SessionProvider } from "next-auth/react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import PublicModeToggle from "@/components/ui/PublicModeToggle";
@@ -92,15 +94,70 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer / Toggle */}
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-white/5 space-y-3">
+        <UserProfile />
+        
         <div className="flex items-center justify-between rounded-xl bg-white/5 p-3">
           <div className="text-xs text-white/50">Privacy Mode</div>
           <PublicModeToggle />
         </div>
-        <div className="mt-4 text-[10px] text-white/20 text-center">
+        
+        <div className="text-[10px] text-white/20 text-center">
           v0.5.0 • Undervalued Replica
         </div>
       </div>
     </aside>
+  );
+}
+
+import { signIn, signOut, useSession } from "next-auth/react";
+import Image from "next/image";
+
+function UserProfile() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") return <div className="h-10 w-full animate-pulse rounded-lg bg-white/5" />;
+
+  if (!session?.user) {
+    return (
+      <button
+        onClick={() => signIn()}
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600/10 px-3 py-2 text-sm font-medium text-blue-400 transition hover:bg-blue-600/20"
+      >
+        Sign In
+      </button>
+    );
+  }
+
+  return (
+    <div className="group relative">
+      <div className="flex items-center gap-3 rounded-lg p-2 transition hover:bg-white/5">
+        {session.user.image ? (
+          <Image
+            src={session.user.image}
+            alt={session.user.name || "User"}
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
+            {session.user.name?.[0] || "U"}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium text-white">{session.user.name}</div>
+          <div className="truncate text-xs text-white/50">{session.user.email}</div>
+        </div>
+      </div>
+      
+      {/* Popover helper could go here, or just a simple sign out button below */}
+      <button
+        onClick={() => signOut()}
+        className="mt-1 w-full rounded-md px-2 py-1 text-xs text-white/30 hover:bg-white/5 hover:text-white/60 text-left"
+      >
+        Sign Out
+      </button>
+    </div>
   );
 }

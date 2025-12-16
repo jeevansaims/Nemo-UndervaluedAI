@@ -2,19 +2,34 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { MOCK_INSIGHTS, type InsightPost } from "@/lib/insights/mockInsights";
-import { loadCustomInsights } from "@/lib/insights/insightStore";
+import { useInsights, type InsightPost as DBPost } from "@/lib/insights/useInsights";
+import { type InsightPost as MockPost, MOCK_INSIGHTS } from "@/lib/insights/mockInsights";
+
+// Adapter
+function mapDBPostToMock(p: DBPost): MockPost {
+    return {
+        slug: p.slug,
+        title: p.title,
+        date: typeof p.createdAt === "string" ? p.createdAt.slice(0, 10) : new Date(p.createdAt).toISOString().slice(0, 10),
+        excerpt: p.contentMd.slice(0, 120) + "...",
+        body: p.contentMd.split("\n\n"),
+        tags: p.tickers
+    };
+}
 
 export default function InsightDetailPage({ params }: { params: { slug: string } }) {
-  const [custom, setCustom] = useState<InsightPost[]>([]);
-
-  useEffect(() => {
-    setCustom(loadCustomInsights());
-  }, []);
-
+  const { getPost, loading } = useInsights();
+  
   const post = useMemo(() => {
-    return [...custom, ...MOCK_INSIGHTS].find((p) => p.slug === params.slug);
-  }, [custom, params.slug]);
+    // Try mock first for public ones
+    const mock = MOCK_INSIGHTS.find(p => p.slug === params.slug);
+    if (mock) return mock;
+    
+    // Then user posts
+    const p = getPost(params.slug);
+    if (p) return mapDBPostToMock(p);
+    return undefined;
+  }, [params.slug, getPost]);
 
   if (!post) {
     return (

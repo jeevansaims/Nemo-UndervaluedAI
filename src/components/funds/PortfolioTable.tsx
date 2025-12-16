@@ -1,81 +1,71 @@
 "use client";
 
-import { Position, CashPosition } from "@/lib/funds/mockFundDetail";
-import { useMemo } from "react";
-import { getPublicMode } from "@/lib/ui/uiStore";
-import { fmtMoneyMaybe } from "@/lib/ui/format";
+import Link from "next/link";
 
-// Since we want the table to be reactive to global toggle but maybe local state too?
-// For now, let's accept isPublic as prop or use hook. 
-// Using hook at top level page and passing down is cleaner, but component-level generic usage works too.
-// Let's passed isPublic from parent for consistency.
-
-export default function PortfolioTable({
-  positions,
-  cash,
-  isPublic,
-}: {
-  positions: Position[];
-  cash: CashPosition;
-  isPublic: boolean;
-}) {
-  const sorted = [...positions].sort((a, b) => b.weightPct - a.weightPct);
-
+function BucketBadge({ bucket }: { bucket?: "SMALL" | "MED" | "LARGE" }) {
+  if (!bucket) return null;
+  const colors = {
+      SMALL: "border-blue-500/20 bg-blue-500/10 text-blue-400",
+      MED: "border-yellow-500/20 bg-yellow-500/10 text-yellow-400",
+      LARGE: "border-orange-500/20 bg-orange-500/10 text-orange-400",
+  };
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Current Portfolio</h3>
-        <div className="text-xs text-white/40">Holdings & Weighting</div>
-      </div>
-      
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-white/5 text-xs text-white/50 uppercase">
-            <tr>
-              <th className="px-6 py-3 font-semibold">Ticker</th>
-              <th className="px-6 py-3 font-semibold text-right">Value</th>
-              <th className="px-6 py-3 font-semibold text-right">Weight</th>
-              <th className="px-6 py-3 font-semibold text-right">Day %</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {sorted.map((pos) => (
-              <tr key={pos.ticker} className="group hover:bg-white/5 transition">
-                <td className="px-6 py-3">
-                  <div className="font-bold text-white">{pos.ticker}</div>
-                  <div className="text-xs text-white/40">{pos.name}</div>
-                </td>
-                <td className="px-6 py-3 text-right font-mono text-white/80">
-                  {fmtMoneyMaybe(pos.value, isPublic)}
-                </td>
-                <td className="px-6 py-3 text-right text-white/80">
-                  {pos.weightPct.toFixed(1)}%
-                </td>
-                <td
-                  className={`px-6 py-3 text-right font-medium ${
-                    pos.dayChangePct >= 0 ? "text-emerald-400" : "text-rose-400"
-                  }`}
-                >
-                  {pos.dayChangePct > 0 ? "+" : ""}
-                  {pos.dayChangePct.toFixed(2)}%
-                </td>
-              </tr>
-            ))}
-            
-            {/* Cash Row */}
-            <tr className="bg-white/5 font-medium">
-              <td className="px-6 py-3 text-white/60 font-semibold">CASH / LIQUIDITY</td>
-              <td className="px-6 py-3 text-right font-mono text-white/80">
-                {fmtMoneyMaybe(cash.value, isPublic)}
+    <span className={`rounded-full border px-2 py-0.5 text-xs ${colors[bucket]}`}>
+      {bucket}
+    </span>
+  );
+}
+
+function getBucket(weight?: number | null): "SMALL" | "MED" | "LARGE" | undefined {
+    if (typeof weight !== "number") return undefined;
+    if (weight >= 12) return "LARGE";
+    if (weight >= 5) return "MED";
+    return "SMALL";
+}
+
+export default function PortfolioTable({ positions, cash, privateMode }: { positions: any[], cash: any, privateMode: boolean }) {
+  // If we have cash, render it (optionally hide exact cash in public if wanted, but user didn't specify)
+  // Focusing on positions from API which have `weightPct` possibly null or `bucket`.
+  
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/5 bg-white/5 p-6">
+      <h3 className="mb-4 text-xl font-semibold">Holdings</h3>
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-white/10 text-white/50">
+            <th className="pb-3">Ticker</th>
+            <th className="pb-3 text-right">Weight</th>
+            <th className="pb-3 pl-6">Rationale / Notes</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-white/5 text-white/80">
+          {positions.map((p) => (
+            <tr key={p.ticker}>
+              <td className="py-3 font-medium">
+                  {p.ticker}
+                  {p.name && <div className="text-xs text-white/40 font-normal">{p.name}</div>}
               </td>
-              <td className="px-6 py-3 text-right text-white/80">
-                {cash.weightPct.toFixed(1)}%
+              <td className="py-3 text-right">
+                  {privateMode && typeof p.weightPct === "number"
+                    ? `${p.weightPct.toFixed(1)}%`
+                    : <BucketBadge bucket={p.bucket || getBucket(p.weightPct)} />
+                  }
               </td>
-              <td className="px-6 py-3 text-right text-white/40">—</td>
+              <td className="py-3 pl-6 text-white/50">
+                  {privateMode ? (p.rationale ?? "—") : "—"}
+              </td>
             </tr>
-          </tbody>
-        </table>
-      </div>
+          ))}
+          {/* Cash row */}
+          {privateMode && cash && (
+             <tr className="text-white/40">
+                 <td className="py-3">CASH</td>
+                 <td className="py-3 text-right">{cash.weightPct}%</td>
+                 <td className="py-3 pl-6">Uninvested capital</td>
+             </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
