@@ -2,7 +2,6 @@
 
 import { resilientFetch } from "@/lib/api/resilientFetch";
 
-const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 const MARKET_CACHE_SECONDS = Number(process.env.MARKET_CACHE_SECONDS || 60);
 
 export class FinnhubError extends Error {
@@ -17,27 +16,29 @@ export async function finnhubGet<T>(
   params: Record<string, string | number>,
   parser?: { parse: (data: unknown) => T } // Optional Zod schema
 ): Promise<T> {
-  const query = new URLSearchParams({
-    token: FINNHUB_API_KEY || "",
-    ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
-  });
+  // Trim the key to remove any whitespace/newlines
+  const token = (process.env.FINNHUB_API_KEY || "").trim();
+  
+  const query = new URLSearchParams(
+    Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
+  );
 
   const url = `https://finnhub.io/api/v1${path}?${query.toString()}`;
 
   // Wrap in resilience layer
-  // Key needs to be unique to the request
   const cacheKey = `finnhub:${path}:${JSON.stringify(params)}`;
 
   const { data } = await resilientFetch<T>(
     cacheKey,
     async () => {
-      // Don't error if key is missing during build, just return null/empty if appropriate or let it fail?
-      // Actually, standard fetch behavior is fine, resilientFetch handles the try/catch
-      if (!FINNHUB_API_KEY) {
+      if (!token) {
         throw new Error("Missing FINNHUB_API_KEY");
       }
 
       const res = await fetch(url, {
+        headers: {
+          "X-Finnhub-Token": token,
+        },
         next: { revalidate: MARKET_CACHE_SECONDS },
       });
 

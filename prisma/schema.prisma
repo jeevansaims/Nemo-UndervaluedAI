@@ -120,14 +120,16 @@ model InsightPost {
 
 // Phase 12: Admin Dashboard & Fund Persistence
 model Fund {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  name        String
-  description String?
-  holdings    Holding[]
-  trades      Trade[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                   String                   @id @default(cuid())
+  slug                 String                   @unique
+  name                 String
+  description          String?
+  holdings             Holding[]
+  trades               Trade[]
+  snapshots            FundSnapshot[]
+  holdingsSnapshots    FundHoldingsSnapshot[]
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
 }
 
 model Holding {
@@ -148,6 +150,7 @@ model Holding {
   @@unique([fundId, ticker])
 }
 
+
 enum TradeAction {
   BUY
   SELL
@@ -167,5 +170,34 @@ model Trade {
   fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
 
   @@index([fundId])
+  @@index([fundId, date])
+}
+
+// Phase 13B: Time-Series Persistence
+model FundSnapshot {
+  id        String   @id @default(cuid())
+  fundId    String
+  date      DateTime // normalized UTC date (00:00)
+  equity    Float    // index-style equity curve (start=100) OR actual portfolio value
+  benchmark Float?   // optional, if storing benchmark curve
+  metrics   Json?    // precomputed metrics (annReturn, sharpe, maxDD, etc.)
+  createdAt DateTime @default(now())
+
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@unique([fundId, date])
+  @@index([fundId, date])
+}
+
+model FundHoldingsSnapshot {
+  id        String   @id @default(cuid())
+  fundId    String
+  date      DateTime
+  holdings  Json     // array of holdings at that date (ticker, weightPct, rationale hash)
+  createdAt DateTime @default(now())
+
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@unique([fundId, date])
   @@index([fundId, date])
 }

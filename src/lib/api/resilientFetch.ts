@@ -3,7 +3,7 @@ type CacheEntry<T> = {
   timestamp: number;
 };
 
-// Simple in-memory cache
+// Simple in-memory cache - only stores successful responses
 const cache = new Map<string, CacheEntry<any>>();
 
 export async function resilientFetch<T>(
@@ -21,6 +21,7 @@ export async function resilientFetch<T>(
 
   try {
     const data = await fetcher();
+    // Only cache successful responses
     cache.set(key, { data, timestamp: now });
     return { data, isStale: false };
   } catch (error) {
@@ -31,7 +32,11 @@ export async function resilientFetch<T>(
       return { data: cached.data, isStale: true };
     }
     
-    // If no cache, rethrow
+    // If no cache, rethrow (DO NOT cache the error)
     throw error;
   }
+}
+
+export function flushResilientCache() {
+  cache.clear();
 }

@@ -9,7 +9,7 @@ import PublicModeToggle from "@/components/ui/PublicModeToggle";
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/" },
   { label: "Funds", href: "/funds" },
-  { label: "P/L Calendar", href: "/calendar" },
+  { label: "P/L Calendar", href: "/pl-calendar" },
   { label: "Daily Review", href: "/daily-review" },
   { label: "Weekly Review", href: "/weekly-review" },
   { label: "Insights", href: "/insights" },
