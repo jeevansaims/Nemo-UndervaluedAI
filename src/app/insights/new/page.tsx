@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { InsightPost } from "@/lib/insights/mockInsights";
 import { addCustomInsight } from "@/lib/insights/insightStore";
 import { buildExcerpt, slugify } from "@/lib/insights/insightHelpers";
+import { generateWeeklyDraft } from "@/lib/insights/draftGenerator";
 import Link from "next/link";
 
 export default function NewInsightPage() {
@@ -101,6 +102,27 @@ export default function NewInsightPage() {
               Tip: Use blank lines for paragraphs.
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              const draft = generateWeeklyDraft({
+                dateISO: date,
+                fundName: "Nemo Systematic Fund",
+                weeklyPnl: 1250,
+                weeklyRomPct: 1.25,
+                greenDays: 4,
+                redDays: 1,
+              });
+
+              setTitle(draft.title);
+              setTags(draft.tags);
+              setBody(draft.body);
+            }}
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold hover:bg-white/10"
+          >
+            Generate Draft (template)
+          </button>
 
           <button
             onClick={handleCreate}
