@@ -1,13 +1,20 @@
-import Link from "next/link";
-import { getInsightBySlug } from "@/lib/insights/mockInsights";
+"use client";
 
-export default async function InsightDetailPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const post = getInsightBySlug(slug);
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { MOCK_INSIGHTS, type InsightPost } from "@/lib/insights/mockInsights";
+import { loadCustomInsights } from "@/lib/insights/insightStore";
+
+export default function InsightDetailPage({ params }: { params: { slug: string } }) {
+  const [custom, setCustom] = useState<InsightPost[]>([]);
+
+  useEffect(() => {
+    setCustom(loadCustomInsights());
+  }, []);
+
+  const post = useMemo(() => {
+    return [...custom, ...MOCK_INSIGHTS].find((p) => p.slug === params.slug);
+  }, [custom, params.slug]);
 
   if (!post) {
     return (
@@ -35,9 +42,7 @@ export default async function InsightDetailPage({
           })}
         </div>
 
-        <h1 className="mt-2 text-3xl font-semibold leading-tight">
-          {post.title}
-        </h1>
+        <h1 className="mt-2 text-3xl font-semibold leading-tight">{post.title}</h1>
 
         {post.tags?.length ? (
           <div className="mt-4 flex flex-wrap gap-2">
@@ -61,9 +66,8 @@ export default async function InsightDetailPage({
         <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-5 text-xs text-white/60">
           <div className="font-semibold text-white/80">Disclaimer</div>
           <div className="mt-2">
-            This content is for informational and educational purposes only and
-            does not constitute investment advice or a solicitation to buy or
-            sell securities.
+            This content is for informational and educational purposes only and does not constitute
+            investment advice or a solicitation to buy or sell securities.
           </div>
         </div>
       </div>
