@@ -88,3 +88,12 @@ export function calcMonthStats(yyyymm: string, daily: DailyPnl[]) {
     romPct: romProxyPct,
   };
 }
+
+export function filterDailyByFund(daily: DailyPnl[], fund: string): DailyPnl[] {
+  if (!fund || fund === "All Funds") return daily;
+  return daily.filter((d) => d.fund === fund);
+}
+
+export function getDayByIso(daily: DailyPnl[], isoDate: string): DailyPnl | undefined {
+  return daily.find((d) => d.date === isoDate);
+}

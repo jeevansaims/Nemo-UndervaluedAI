@@ -5,7 +5,7 @@ function money(n: number) {
   return `${sign}$${Math.abs(n).toLocaleString()}`;
 }
 
-export default function DayCell({ cell }: { cell: CalendarCell }) {
+export default function DayCell({ cell, onClick }: { cell: CalendarCell; onClick: (iso: string) => void }) {
   const pnl = cell.data?.pnl ?? null;
 
   const bg =
@@ -36,7 +36,10 @@ export default function DayCell({ cell }: { cell: CalendarCell }) {
       : "text-white/70";
 
   return (
-    <div className={`rounded-2xl border ${border} ${bg} p-3`}>
+    <button
+      onClick={() => onClick(cell.isoDate)}
+      className={`w-full text-left rounded-2xl border ${border} ${bg} p-3 hover:bg-white/10 transition`}
+    >
       <div className="flex items-center justify-between">
         <div className={`text-xs ${cell.inMonth ? "text-white/60" : "text-white/25"}`}>
           {cell.day}
@@ -55,6 +58,6 @@ export default function DayCell({ cell }: { cell: CalendarCell }) {
       ) : (
         <div className="mt-1 text-[11px] text-white/20">&nbsp;</div>
       )}
-    </div>
+    </button>
   );
 }

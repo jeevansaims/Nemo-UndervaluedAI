@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import DayCell from "@/components/calendar/DayCell";
-import { MOCK_DAILY } from "@/lib/calendar/mockDaily";
-import { buildMonthGrid, calcMonthStats, formatYYYYMM, parseYYYYMM } from "@/lib/calendar/calendarUtils";
+import DayModal from "@/components/calendar/DayModal";
+import { FUNDS, MOCK_DAILY } from "@/lib/calendar/mockDaily";
+import { buildMonthGrid, calcMonthStats, filterDailyByFund, formatYYYYMM, getDayByIso, parseYYYYMM } from "@/lib/calendar/calendarUtils";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -19,9 +20,18 @@ function money(n: number) {
 
 export default function CalendarPage() {
   const [yyyymm, setYyyymm] = useState<string>(() => formatYYYYMM(new Date()));
+  const [fund, setFund] = useState<string>("All Funds");
+  const [selectedIso, setSelectedIso] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const grid = useMemo(() => buildMonthGrid(yyyymm, MOCK_DAILY), [yyyymm]);
-  const stats = useMemo(() => calcMonthStats(yyyymm, MOCK_DAILY), [yyyymm]);
+  const filteredDaily = useMemo(() => filterDailyByFund(MOCK_DAILY, fund), [fund]);
+  const grid = useMemo(() => buildMonthGrid(yyyymm, filteredDaily), [yyyymm, filteredDaily]);
+  const stats = useMemo(() => calcMonthStats(yyyymm, filteredDaily), [yyyymm, filteredDaily]);
+
+  const selectedDay = useMemo(() => {
+    if (!selectedIso) return undefined;
+    return getDayByIso(filteredDaily, selectedIso);
+  }, [filteredDaily, selectedIso]);
 
   function prevMonth() {
     const d = parseYYYYMM(yyyymm);
@@ -51,6 +61,18 @@ export default function CalendarPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <select
+              value={fund}
+              onChange={(e) => setFund(e.target.value)}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+            >
+              {FUNDS.map((f) => (
+                <option key={f} value={f} className="bg-neutral-950">
+                  {f}
+                </option>
+              ))}
+            </select>
+            
             <button onClick={prevMonth} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
               ←
             </button>
@@ -109,10 +131,23 @@ export default function CalendarPage() {
 
           <div className="mt-3 grid grid-cols-7 gap-3">
             {grid.map((cell) => (
-              <DayCell key={cell.isoDate} cell={cell} />
+              <DayCell
+                key={cell.isoDate}
+                cell={cell}
+                onClick={(iso) => {
+                  setSelectedIso(iso);
+                  setModalOpen(true);
+                }}
+              />
             ))}
           </div>
         </div>
+
+        <DayModal
+          open={modalOpen}
+          day={selectedDay}
+          onClose={() => setModalOpen(false)}
+        />
       </div>
     </main>
   );
