@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { PerfPoint } from "@/lib/funds/mockPerformance";
+import type { PerfPoint } from "@/lib/data/fundData";
 import { getPublicMode } from "@/lib/ui/uiStore";
 import { fmtMoneyMaybe, fmtPct } from "@/lib/ui/format";
 

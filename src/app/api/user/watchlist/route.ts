@@ -1,10 +1,8 @@
 import { auth } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
-
-export async function GET(req: Request) {
+export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
     return new NextResponse("Unauthorized", { status: 401 });
@@ -12,10 +10,11 @@ export async function GET(req: Request) {
 
   const items = await prisma.watchlistItem.findMany({
     where: { userId: session.user.id },
-    orderBy: { ticker: "asc" },
+    include: { stock: { select: { ticker: true } } },
+    orderBy: { addedAt: "desc" },
   });
 
-  return NextResponse.json({ tickers: items.map((i) => i.ticker) });
+  return NextResponse.json({ tickers: items.map((i) => i.stock.ticker) });
 }
 
 export async function POST(req: Request) {
@@ -32,17 +31,31 @@ export async function POST(req: Request) {
       return new NextResponse("Invalid ticker", { status: 400 });
     }
 
+    // Find or create the stock
+    let stock = await prisma.stock.findUnique({ where: { ticker } });
+    
+    if (!stock) {
+      // Create a placeholder stock - will be enriched later
+      stock = await prisma.stock.create({
+        data: {
+          ticker,
+          companyName: ticker, // Placeholder
+          currentPrice: 0,
+        },
+      });
+    }
+
     await prisma.watchlistItem.upsert({
       where: {
-        userId_ticker: {
+        userId_stockId: {
           userId: session.user.id,
-          ticker: ticker,
+          stockId: stock.id,
         },
       },
       update: {},
       create: {
         userId: session.user.id,
-        ticker: ticker,
+        stockId: stock.id,
       },
     });
 
@@ -67,14 +80,17 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    // Check if exists first to avoid error if already deleted
-    // Or just deleteMany to be safe and idempotent
-    await prisma.watchlistItem.deleteMany({
-      where: {
-        userId: session.user.id,
-        ticker: ticker,
-      },
-    });
+    // Find the stock first
+    const stock = await prisma.stock.findUnique({ where: { ticker } });
+    
+    if (stock) {
+      await prisma.watchlistItem.deleteMany({
+        where: {
+          userId: session.user.id,
+          stockId: stock.id,
+        },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

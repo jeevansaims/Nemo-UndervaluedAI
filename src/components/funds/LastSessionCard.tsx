@@ -2,7 +2,7 @@
 
 import { getPublicMode } from "@/lib/ui/uiStore";
 import { fmtMoneyMaybe, fmtPct } from "@/lib/ui/format";
-import type { PerfPoint } from "@/lib/funds/mockPerformance";
+import type { PerfPoint } from "@/lib/data/fundData";
 
 function delta(a: number, b: number) {
   return a - b;

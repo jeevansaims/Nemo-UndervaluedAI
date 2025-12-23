@@ -1,6 +1,12 @@
 import type { RangeKey } from "@/lib/market/timeRange";
 
-export type PerfPoint = { date: string; fundPct: number; benchPct: number };
+export type PerfPoint = {
+  date: string;
+  fundPct: number;
+  benchPct: number;
+  fundValue?: number;
+  benchValue?: number;
+};
 
 export async function getFundPerformance(params: {
   slug: string;

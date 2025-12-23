@@ -176,12 +176,12 @@ export async function POST(
         confidenceScore: result.portfolioManager.confidenceScore,
         targetPrice: result.portfolioManager.targetPrice,
         processingTime: result.processingTime,
-        agentResults: {
+        agentResults: JSON.parse(JSON.stringify({
           valuation: result.valuation,
           sentiment: result.sentiment,
           fundamental: result.fundamental,
           risk: result.risk,
-        },
+        })),
       },
     });
 
