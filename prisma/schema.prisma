@@ -252,3 +252,264 @@ model StockAnalysis {
   @@index([ticker])
   @@index([createdAt])
 }
+
+// Phase 14: Undervalued.ai Core Models
+
+// Stock Information
+model Stock {
+  id              String     @id @default(cuid())
+  ticker          String     @unique
+  companyName     String
+  sector          String?
+  industry        String?
+  marketCap       Float?
+  peRatio         Float?
+  pbRatio         Float?
+  psRatio         Float?
+  debtToEquity    Float?
+  currentPrice    Float
+
+  // Relationships
+  analyses        StockAnalysis[]
+  insiderAlerts   InsiderAlert[]
+  watchlistItems  WatchlistItem[]
+  portfolioHoldings PortfolioHolding[]
+  historicalData  StockHistoricalData[]
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([ticker])
+}
+
+// Historical stock price data
+model StockHistoricalData {
+  id              String     @id @default(cuid())
+  stockId         String
+  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  date            DateTime
+  open            Float
+  high            Float
+  low             Float
+  close           Float
+  volume          Float
+
+  createdAt       DateTime   @default(now())
+
+  @@unique([stockId, date])
+  @@index([stockId, date])
+}
+
+// Insider Trading Alerts
+model InsiderAlert {
+  id              String     @id @default(cuid())
+  stockId         String
+  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  insiderName     String
+  title           String
+  relation        String     // CEO, Director, Officer, etc.
+  transactionType String     // BUY, SELL
+  shares          Int
+  price           Float
+  date            DateTime
+
+  createdAt       DateTime   @default(now())
+
+  @@index([stockId])
+  @@index([date])
+}
+
+// User watchlist
+model WatchlistItem {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  stockId         String
+  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  addedAt         DateTime   @default(now())
+  notes           String?
+
+  @@unique([userId, stockId])
+  @@index([userId])
+}
+
+// Portfolio management
+model Portfolio {
+  id              String     @id @default(cuid())
+  userId          String     @unique
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name            String     @default("My Portfolio")
+  description     String?
+  isPrivate       Boolean    @default(true)
+
+  holdings        PortfolioHolding[]
+  performance     PortfolioPerformance[]
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+// Individual holdings in portfolio
+model PortfolioHolding {
+  id              String     @id @default(cuid())
+  portfolioId     String
+  portfolio       Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  stockId         String
+  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  quantity        Float
+  averagePrice    Float
+  purchaseDate    DateTime
+  notes           String?
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([portfolioId, stockId])
+  @@index([portfolioId])
+  @@index([stockId])
+}
+
+// Portfolio performance snapshot
+model PortfolioPerformance {
+  id              String     @id @default(cuid())
+  portfolioId     String
+  portfolio       Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  date            DateTime
+  totalValue      Float
+  totalCost       Float
+  gainLoss        Float
+  percentageGain  Float
+
+  @@unique([portfolioId, date])
+  @@index([portfolioId, date])
+}
+
+// Daily Brief Email Subscription
+model DailyBrief {
+  id              String     @id @default(cuid())
+  email           String     @unique
+
+  isSubscribed    Boolean    @default(true)
+  subscriptionDate DateTime  @default(now())
+  unsubscribeToken String?   @unique
+
+  lastSentDate    DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([isSubscribed])
+}
+
+// AI Fund Performance (Like their actual hedge fund)
+model AIFund {
+  id              String     @id @default(cuid())
+  name            String     @unique // "Original Fund", "SP500 AI Select", etc.
+  slug            String     @unique
+  description     String?
+
+  strategy        String?
+  allocation      Json?      // JSON for sector allocation, etc.
+
+  startingCapital Float      @default(100000)
+  currentValue    Float
+  inception Date DateTime
+
+  performance     AIFundPerformance[]
+  holdings        AIFundHolding[]
+
+  isPublic        Boolean    @default(true)
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([slug])
+}
+
+// Daily fund performance data
+model AIFundPerformance {
+  id              String     @id @default(cuid())
+  fundId          String
+  fund            AIFund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  date            DateTime
+  value           Float
+  return          Float      // percentage
+  benchmarkReturn Float?
+
+  @@unique([fundId, date])
+  @@index([fundId, date])
+}
+
+// Fund holdings
+model AIFundHolding {
+  id              String     @id @default(cuid())
+  fundId          String
+  fund            AIFund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  ticker          String
+  companyName     String?
+  weight          Float      // percentage of portfolio
+  shares          Float
+  entryPrice      Float
+  currentPrice    Float
+
+  rationale       String?    // Why fund holds this stock
+
+  addedDate       DateTime   @default(now())
+  removedDate     DateTime?
+
+  @@unique([fundId, ticker, addedDate])
+  @@index([fundId])
+}
+
+// Market insights & analysis
+model MarketInsight {
+  id              String     @id @default(cuid())
+
+  title           String
+  content         String     @db.Text
+  category        String     // "Market", "Sector", "Macro", etc.
+
+  relatedStocks   String[]   // Array of ticker symbols
+  sentiment       String?    // BULLISH, NEUTRAL, BEARISH
+
+  source          String?    // Where the insight came from
+
+  isPublished     Boolean    @default(false)
+  publishedDate   DateTime?
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([category])
+  @@index([publishedDate])
+}
+
+// User preferences and settings
+model UserPreferences {
+  id              String     @id @default(cuid())
+  userId          String     @unique
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  theme           String     @default("dark")
+  emailNotifications Boolean  @default(true)
+  dailyBrief      Boolean    @default(false)
+  insiderAlerts   Boolean    @default(true)
+
+  preferredCurrencies String[]
+  preferredSectors    String[]
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+}
