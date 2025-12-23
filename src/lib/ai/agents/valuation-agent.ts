@@ -51,7 +51,7 @@ Dividend Yield: ${marketData.dividendYield ? (marketData.dividendYield * 100).to
 `;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 2000,
       temperature: 0.3,
       messages: [
