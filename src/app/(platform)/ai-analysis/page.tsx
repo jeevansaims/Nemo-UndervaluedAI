@@ -375,15 +375,15 @@ export default function AIAnalysisPage() {
               <AlertCircle className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div className="space-y-2 text-sm text-muted-foreground">
                 <p>
-                  <strong>How it works:</strong> Our AI system uses multiple specialized agents to analyze
-                  stocks from different perspectives:
+                  <strong>How it works:</strong> Our AI system uses multiple specialized agents powered by
+                  Claude Sonnet 4 (Anthropic) to analyze stocks from different perspectives:
                 </p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>Valuation Agent (Claude) - Deep value analysis and intrinsic value calculation</li>
-                  <li>Sentiment Agent (GPT-4) - Market sentiment and momentum analysis</li>
-                  <li>Fundamental Agent (Claude) - Financial health and business quality</li>
-                  <li>Risk Agent (GPT-4) - Comprehensive risk assessment</li>
-                  <li>Portfolio Manager (Claude) - Synthesis and final recommendation</li>
+                  <li>Valuation Agent - Deep value analysis and intrinsic value calculation</li>
+                  <li>Sentiment Agent - Market sentiment and momentum analysis</li>
+                  <li>Fundamental Agent - Financial health and business quality</li>
+                  <li>Risk Agent - Comprehensive risk assessment</li>
+                  <li>Portfolio Manager - Synthesis and final recommendation</li>
                 </ul>
                 <p className="mt-2">
                   Free users get 5 analyses per month. Upgrade to Pro for unlimited access.
