@@ -46,6 +46,10 @@ model User {
   alertSubscriptions AlertSubscription[]
   alertPreferences   AlertPreferences?
   insights           InsightPost[]
+  stockAnalyses      StockAnalysis[]
+  // Freemium usage tracking
+  analysisCount      Int         @default(0)
+  isPro              Boolean     @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -200,4 +204,51 @@ model FundHoldingsSnapshot {
 
   @@unique([fundId, date])
   @@index([fundId, date])
+}
+
+// AI Stock Analysis Models
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model StockAnalysis {
+  id              String          @id @default(cuid())
+  userId          String
+  ticker          String
+  status          AnalysisStatus  @default(PENDING)
+
+  // Market data snapshot at time of analysis
+  currentPrice    Float?
+  marketCap       Float?
+  peRatio         Float?
+
+  // AI-generated analysis sections
+  valuationResult String?         @db.Text // From Valuation Agent
+  sentimentResult String?         @db.Text // From Sentiment Agent
+  fundamentalResult String?       @db.Text // From Fundamental Agent
+  riskResult      String?         @db.Text // From Risk Agent
+  finalReport     String?         @db.Text // From Portfolio Manager Agent
+
+  // Summary and recommendation
+  recommendation  String?         // BUY, HOLD, SELL
+  confidenceScore Float?          // 0-100
+  targetPrice     Float?
+
+  // Metadata
+  agentResults    Json?           // Raw agent outputs for debugging
+  processingTime  Int?            // milliseconds
+  error           String?         @db.Text
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, ticker])
+  @@index([ticker])
+  @@index([createdAt])
 }

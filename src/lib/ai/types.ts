@@ -1,0 +1,88 @@
+/**
+ * AI Agent Types for Stock Analysis
+ */
+
+export interface MarketData {
+  ticker: string;
+  currentPrice: number;
+  marketCap?: number;
+  peRatio?: number;
+  pbRatio?: number;
+  debtToEquity?: number;
+  roe?: number;
+  revenueGrowth?: number;
+  earningsGrowth?: number;
+  freeCashFlow?: number;
+  dividendYield?: number;
+  beta?: number;
+  // News and sentiment data
+  recentNews?: Array<{
+    headline: string;
+    summary: string;
+    source: string;
+    sentiment: string;
+    publishedAt: string;
+  }>;
+  // Insider trading
+  insiderTransactions?: Array<{
+    name: string;
+    position: string;
+    transactionType: string;
+    shares: number;
+    value: number;
+    date: string;
+  }>;
+}
+
+export interface AgentResult {
+  agentName: string;
+  analysis: string;
+  keyPoints: string[];
+  score?: number; // 0-100 rating
+  timestamp: Date;
+}
+
+export interface ValuationResult extends AgentResult {
+  agentName: 'Valuation';
+  intrinsicValue?: number;
+  targetPrice?: number;
+  upside?: number; // percentage
+}
+
+export interface SentimentResult extends AgentResult {
+  agentName: 'Sentiment';
+  overallSentiment: 'Bullish' | 'Neutral' | 'Bearish';
+  sentimentScore: number; // -100 to 100
+}
+
+export interface FundamentalResult extends AgentResult {
+  agentName: 'Fundamental';
+  financialHealth: 'Strong' | 'Moderate' | 'Weak';
+  growthPotential: 'High' | 'Medium' | 'Low';
+}
+
+export interface RiskResult extends AgentResult {
+  agentName: 'Risk';
+  riskLevel: 'Low' | 'Medium' | 'High';
+  riskFactors: string[];
+}
+
+export interface PortfolioManagerResult {
+  finalReport: string;
+  recommendation: 'BUY' | 'HOLD' | 'SELL';
+  confidenceScore: number; // 0-100
+  targetPrice?: number;
+  timeHorizon: string;
+  keyTakeaways: string[];
+}
+
+export interface AnalysisResult {
+  ticker: string;
+  marketData: MarketData;
+  valuation: ValuationResult;
+  sentiment: SentimentResult;
+  fundamental: FundamentalResult;
+  risk: RiskResult;
+  portfolioManager: PortfolioManagerResult;
+  processingTime: number; // milliseconds
+}
