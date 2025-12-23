@@ -169,3 +169,41 @@ model Trade {
   @@index([fundId])
   @@index([fundId, date])
 }
+
+// Stock Analysis Results
+enum Recommendation {
+  BUY
+  SELL
+  HOLD
+}
+
+model StockAnalysis {
+  id             String         @id @default(cuid())
+  userId         String?
+  ticker         String
+  recommendation Recommendation
+  targetPrice    Float?
+  confidence     Float          // 0-100 percentage
+
+  // AI Analysis breakdown
+  valuationScore Float?         // 0-100
+  sentimentScore Float?         // 0-100
+  riskScore      Float?         // 0-100
+  technicalScore Float?         // 0-100
+
+  // Detailed analysis
+  reasoning      String?        @db.Text
+  keyMetrics     Json?          // Store relevant metrics
+
+  // Market data at time of analysis
+  currentPrice   Float?
+  marketCap      Float?
+  peRatio        Float?
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([ticker])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}

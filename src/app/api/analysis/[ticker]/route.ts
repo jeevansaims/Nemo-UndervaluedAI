@@ -12,6 +12,8 @@ import {
   type FinnhubCandles,
   type FinnhubBasicFinancials
 } from "@/lib/validators/finnhub";
+import { analyzeStock } from "@/lib/ai-agents";
+import { prisma } from "@/lib/prisma";
 
 function isoDateFromUnix(ts: number): string {
   return new Date(ts * 1000).toISOString().slice(0, 10);
@@ -67,6 +69,69 @@ export async function GET(req: Request, ctx: { params: Promise<{ ticker: string 
       "52WeekPriceReturnDaily": m["52WeekPriceReturnDaily"] ?? null,
     };
 
+    // Helper to convert to number
+    const toNum = (val: string | number | null | undefined): number | undefined => {
+      if (val === null || val === undefined) return undefined;
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return isNaN(num) ? undefined : num;
+    };
+
+    // Run AI analysis
+    let aiAnalysis = null;
+    try {
+      const analysisResult = await analyzeStock({
+        ticker,
+        currentPrice: quote.c,
+        marketCap: toNum(profile.marketCapitalization),
+        pe: toNum(m["peTTM"]),
+        pb: toNum(m["pb"]),
+        ps: toNum(m["psTTM"]),
+        eps: toNum(m["epsTTM"]),
+        roe: toNum(m["roeTTM"]),
+        netMargin: toNum(m["netMarginTTM"]),
+        operatingMargin: toNum(m["operatingMarginTTM"]),
+        priceChange52W: toNum(m["52WeekPriceReturnDaily"]),
+        high52W: toNum(m["52WeekHigh"]),
+        low52W: toNum(m["52WeekLow"]),
+        volatility: risk?.annualizedVolatilityPct,
+        maxDrawdown: risk?.maxDrawdownPct,
+      });
+
+      // Store analysis in database
+      try {
+        await prisma.stockAnalysis.create({
+          data: {
+            ticker,
+            recommendation: analysisResult.recommendation,
+            targetPrice: analysisResult.targetPrice ?? null,
+            confidence: analysisResult.confidence,
+            valuationScore: analysisResult.valuationScore,
+            sentimentScore: analysisResult.sentimentScore,
+            riskScore: analysisResult.riskScore,
+            technicalScore: analysisResult.technicalScore,
+            reasoning: analysisResult.reasoning,
+            keyMetrics: {
+              pe: toNum(m["peTTM"]),
+              pb: toNum(m["pb"]),
+              eps: toNum(m["epsTTM"]),
+              roe: toNum(m["roeTTM"]),
+            },
+            currentPrice: quote.c,
+            marketCap: toNum(profile.marketCapitalization) ?? null,
+            peRatio: toNum(m["peTTM"]) ?? null,
+          },
+        });
+      } catch (dbError) {
+        console.error("[API] Failed to save analysis to DB:", dbError);
+        // Continue even if DB save fails
+      }
+
+      aiAnalysis = analysisResult;
+    } catch (aiError) {
+      console.error("[API] AI analysis failed:", aiError);
+      // Continue with raw data even if AI analysis fails
+    }
+
     return NextResponse.json({
       ticker,
       range,
@@ -95,6 +160,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ ticker: string 
       priceSeries: points,        // [{date, close}]
       fundamentals: headline,     // selected metrics
       risk,                       // computed from your metrics engine
+      aiAnalysis,                 // AI agent recommendation
     });
   } catch (e: any) {
     // Keep it resilient: return minimal error + allow page to show an “unavailable” state

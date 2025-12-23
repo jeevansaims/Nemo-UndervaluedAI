@@ -38,7 +38,7 @@ export default async function TickerAnalysisPage({ params }: { params: Promise<{
     );
   }
 
-  const { profile, quote, fundamentals, risk } = data;
+  const { profile, quote, fundamentals, risk, aiAnalysis } = data;
 
   // Map to existing bullet format
   // We can refine this later to be more structured
@@ -92,12 +92,73 @@ export default async function TickerAnalysisPage({ params }: { params: Promise<{
           </div>
         </div>
         
+        {/* AI Analysis Recommendation Card */}
+        {aiAnalysis && (
+          <div className="mt-6 rounded-2xl border border-white/10 bg-gradient-to-br from-blue-600/10 to-purple-600/10 p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-xs text-white/50 uppercase tracking-wider">AI Analysis</div>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className={`text-3xl font-bold ${
+                    aiAnalysis.recommendation === 'BUY' ? 'text-green-400' :
+                    aiAnalysis.recommendation === 'SELL' ? 'text-red-400' : 'text-yellow-400'
+                  }`}>
+                    {aiAnalysis.recommendation}
+                  </div>
+                  <div>
+                    <div className="text-sm text-white/60">Target Price</div>
+                    <div className="text-2xl font-semibold">
+                      {aiAnalysis.targetPrice ? `$${aiAnalysis.targetPrice.toFixed(2)}` : 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-white/60">Confidence</div>
+                    <div className="text-2xl font-semibold">{aiAnalysis.confidence}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Score Breakdown */}
+            <div className="mt-4 grid grid-cols-4 gap-3">
+              <div className="rounded-lg bg-white/5 p-3">
+                <div className="text-xs text-white/50">Valuation</div>
+                <div className="mt-1 text-lg font-semibold">{aiAnalysis.valuationScore}/100</div>
+              </div>
+              <div className="rounded-lg bg-white/5 p-3">
+                <div className="text-xs text-white/50">Risk</div>
+                <div className="mt-1 text-lg font-semibold">{aiAnalysis.riskScore}/100</div>
+              </div>
+              <div className="rounded-lg bg-white/5 p-3">
+                <div className="text-xs text-white/50">Technical</div>
+                <div className="mt-1 text-lg font-semibold">{aiAnalysis.technicalScore}/100</div>
+              </div>
+              <div className="rounded-lg bg-white/5 p-3">
+                <div className="text-xs text-white/50">Sentiment</div>
+                <div className="mt-1 text-lg font-semibold">{aiAnalysis.sentimentScore}/100</div>
+              </div>
+            </div>
+
+            {/* AI Reasoning */}
+            {aiAnalysis.reasoning && (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm text-white/70 hover:text-white">
+                  View detailed analysis reasoning
+                </summary>
+                <div className="mt-3 rounded-lg bg-white/5 p-4 text-sm text-white/80 whitespace-pre-wrap">
+                  {aiAnalysis.reasoning}
+                </div>
+              </details>
+            )}
+          </div>
+        )}
+
         <div className="mt-6">
           <PriceChart series={data.priceSeries} />
         </div>
 
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/70">
-          This is a real-time analysis based on Finnhub market data.
+          This is a real-time analysis using multi-agent AI system and Finnhub market data.
         </div>
         
         <div className="mt-6 grid gap-4 md:grid-cols-2">
