@@ -53,7 +53,14 @@ export default function InsightsPage() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        <div className="mt-8 flex items-center gap-4 text-sm text-white/50 border-b border-white/10 pb-4">
+            <button className="text-white font-medium border-b-2 border-emerald-500 pb-4 -mb-4.5">All Analysis</button>
+            <button className="hover:text-white transition pb-4 -mb-4">Macro</button>
+            <button className="hover:text-white transition pb-4 -mb-4">Equities</button>
+            <button className="hover:text-white transition pb-4 -mb-4">Crypto</button>
+        </div>
+
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {allPosts.map((post) => (
             <InsightCard key={`${post.slug}-${post.date}`} post={post} />
           ))}

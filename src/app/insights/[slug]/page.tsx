@@ -72,9 +72,11 @@ export default function InsightDetailPage({ params }: { params: { slug: string }
           </div>
         ) : null}
 
-        <div className="mt-8 space-y-4 text-sm leading-7 text-white/80">
+        <div className="mt-10 space-y-6 text-lg leading-8 text-neutral-300 font-light tracking-wide">
           {post.body.map((p, i) => (
-            <p key={i}>{p}</p>
+            <p key={i} className={i === 0 ? "first-letter:float-left first-letter:mr-3 first-letter:text-5xl first-letter:font-bold first-letter:text-white" : ""}>
+              {p}
+            </p>
           ))}
         </div>
 

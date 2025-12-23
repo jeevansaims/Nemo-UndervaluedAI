@@ -41,5 +41,8 @@
   - [x] Mock Data Generator (`src/lib/insider`)
   - [x] API Route (`/api/insider-alerts`)
   - [x] Insider Dashboard UI (`/alerts`)
-- [ ] Weekly Insights (`/insights`)
+- [x] Weekly Insights (`/insights`)
+  - [x] Post Editor (`/insights/new`)
+  - [x] Premium List UI
+  - [x] Typography Polish
 - [ ] Watchlists (`/lists`)
