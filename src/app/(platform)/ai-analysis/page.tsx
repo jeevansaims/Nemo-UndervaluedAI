@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, TrendingUp, TrendingDown, Minus, AlertCircle } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, Minus, AlertCircle, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateAnalysisPDF } from '@/lib/utils/pdfGenerator';
 
 interface AnalysisResult {
   ticker: string;
@@ -105,11 +106,16 @@ export default function AIAnalysisPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">AI Stock Analysis</h1>
-        <p className="text-muted-foreground">
-          Get comprehensive AI-powered analysis using multiple expert agents
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">AI Stock Analysis</h1>
+          <p className="text-muted-foreground">
+            Get comprehensive AI-powered analysis using multiple expert agents
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <a href="/ai-analysis/history">View History</a>
+        </Button>
       </div>
 
       {/* Request Form */}
@@ -182,6 +188,28 @@ export default function AIAnalysisPage() {
                   <div className="text-sm text-muted-foreground mt-2">
                     Confidence: {result.portfolioManager.confidenceScore}%
                   </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4"
+                    onClick={() => generateAnalysisPDF({
+                      ticker: result.ticker,
+                      recommendation: result.portfolioManager.recommendation,
+                      confidenceScore: result.portfolioManager.confidenceScore,
+                      targetPrice: result.portfolioManager.targetPrice,
+                      currentPrice: result.marketData.currentPrice,
+                      marketCap: result.marketData.marketCap,
+                      createdAt: new Date(),
+                      finalReport: result.portfolioManager.finalReport,
+                      valuationResult: result.valuation.analysis,
+                      sentimentResult: result.sentiment.analysis,
+                      fundamentalResult: result.fundamental.analysis,
+                      riskResult: result.risk.analysis,
+                    })}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Report
+                  </Button>
                 </div>
               </div>
             </CardHeader>
