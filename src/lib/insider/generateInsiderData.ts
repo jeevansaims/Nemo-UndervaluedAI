@@ -54,7 +54,7 @@ export function generateInsiderTrades(count: number = 50): InsiderTrade[] {
     // Try to match CEO to company if possible for realism, otherwise random
     const insider = INSIDERS[Math.floor(Math.random() * INSIDERS.length)];
     
-    const type = Math.random() > 0.6 ? 'Sell' : 'Buy'; // slightly more sells usually
+    const type: 'Buy' | 'Sell' = Math.random() > 0.6 ? 'Sell' : 'Buy'; // slightly more sells usually
     const price = 50 + Math.random() * 450;
     const shares = Math.floor(1000 + Math.random() * 50000);
     const value = price * shares;

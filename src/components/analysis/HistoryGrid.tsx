@@ -21,10 +21,10 @@ export default function HistoryGrid({ history }: HistoryGridProps) {
       marketCap: analysis.marketCap || undefined,
       createdAt: analysis.createdAt,
       finalReport: analysis.finalReport || undefined,
-      valuationResult: analysis.valuationResult || undefined,
-      sentimentResult: analysis.sentimentResult || undefined,
-      fundamentalResult: analysis.fundamentalResult || undefined,
-      riskResult: analysis.riskResult || undefined,
+      valuationResult: undefined,
+      sentimentResult: undefined,
+      fundamentalResult: undefined,
+      riskResult: undefined,
     });
   };
 

@@ -28,9 +28,8 @@ export default async function HistoryPage() {
   }
 
   const history = await prisma.stockAnalysis.findMany({
-    where: { 
-      userId: user.id,
-      status: 'COMPLETED'
+    where: {
+      userId: user.id
     },
     orderBy: { createdAt: 'desc' }
   });

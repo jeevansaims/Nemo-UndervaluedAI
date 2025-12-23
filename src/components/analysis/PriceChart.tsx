@@ -10,11 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-type PricePoint = {
-  date: string;
-  price: number;
-};
+import type { PricePoint } from "@/lib/analysis/mockPriceSeries";
 
 type RangeKey = "1M" | "3M" | "6M" | "ALL";
 

@@ -32,9 +32,13 @@ Decision Framework:
 - HOLD: Mixed signals, fairly valued, or awaiting catalyst
 - SELL: Overvalued, deteriorating fundamentals, high risk, or better opportunities elsewhere
 
-Provide a comprehensive final report including:
-- Clear investment recommendation with confidence score
-- Target price and time horizon (e.g., "12-month target")
+IMPORTANT: Your response must include these exact fields in this format:
+- Recommendation: [BUY/HOLD/SELL]
+- Confidence: [number from 0-100]
+- Target Price: $[amount]
+- Time Horizon: [timeframe]
+
+Then provide:
 - Top 3-5 key takeaways (why this recommendation?)
 - Risk-reward profile summary
 - What would change your thesis? (what to watch)
@@ -100,11 +104,21 @@ ${riskResult.riskFactors.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 
     const finalReport = message.content[0].type === 'text' ? message.content[0].text : '';
 
-    // Parse recommendation and confidence
+    // Parse recommendation and confidence with more robust regex patterns
+    // Handles formats like: "Recommendation: BUY", "RECOMMENDATION: BUY", etc.
     const recommendationMatch = finalReport.match(/recommendation[:\s]+(BUY|HOLD|SELL)/i);
-    const confidenceMatch = finalReport.match(/confidence[:\s]+(\d+)/i);
-    const targetPriceMatch = finalReport.match(/target price[:\s]+\$?([\d,.]+)/i);
-    const timeHorizonMatch = finalReport.match(/time horizon[:\s]+([^\n]+)/i);
+
+    // Handles formats like: "Confidence: 85", "Confidence Score: 85", "Confidence: 85/100", "85% confident"
+    const confidenceMatch = finalReport.match(/confidence(?:\s+score)?[:\s]+(\d+)(?:\/100|%)?/i) ||
+                           finalReport.match(/(\d+)(?:\/100|%)?\s+confidence/i) ||
+                           finalReport.match(/confidence[:\s]+(\d+)/i);
+
+    // Handles formats like: "Target Price: $150", "Target: $150.50", "$150 target"
+    const targetPriceMatch = finalReport.match(/target(?:\s+price)?[:\s]+\$?([\d,.]+)/i);
+
+    // Handles formats like: "Time Horizon: 12 months", "Horizon: 6-12 months"
+    const timeHorizonMatch = finalReport.match(/time\s+horizon[:\s]+([^\n]+)/i) ||
+                            finalReport.match(/horizon[:\s]+([^\n]+)/i);
 
     const recommendation = recommendationMatch
       ? (recommendationMatch[1].toUpperCase() as 'BUY' | 'HOLD' | 'SELL')
@@ -114,6 +128,14 @@ ${riskResult.riskFactors.map((r, i) => `${i + 1}. ${r}`).join('\n')}
       ? parseFloat(targetPriceMatch[1].replace(/,/g, ''))
       : valuationResult.targetPrice;
     const timeHorizon = timeHorizonMatch ? timeHorizonMatch[1].trim() : '12 months';
+
+    // Debug logging to help identify parsing issues
+    if (!confidenceMatch) {
+      console.warn(`[Portfolio Manager] Failed to parse confidence from report for ${marketData.ticker}. Defaulting to 50.`);
+      console.warn(`[Portfolio Manager] First 500 chars of report:`, finalReport.substring(0, 500));
+    } else {
+      console.log(`[Portfolio Manager] Successfully parsed confidence: ${confidenceScore}% for ${marketData.ticker}`);
+    }
 
     // Extract key takeaways
     const keyTakeaways = finalReport

@@ -122,83 +122,49 @@ export async function POST(
     const { ticker } = await params;
     const upperTicker = ticker.toUpperCase();
 
-    // 3. Get user and check usage limits
+    // 3. Get user
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true, analysisCount: true, isPro: true },
+      select: { id: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 4. Check if user has exceeded free limit
-    if (!user.isPro && user.analysisCount >= FREE_ANALYSIS_LIMIT) {
-      return NextResponse.json(
-        {
-          error: 'Analysis limit reached',
-          message: `You've reached your limit of ${FREE_ANALYSIS_LIMIT} free analyses. Upgrade to Pro for unlimited access.`,
-          limitReached: true,
-        },
-        { status: 403 }
-      );
-    }
+    // 4. Fetch market data
+    const marketData = await fetchMarketData(upperTicker);
 
-    // 5. Create pending analysis record
+    // 5. Run AI analysis
+    const result = await runStockAnalysis(marketData);
+
+    // 6. Store analysis record with results
     const analysis = await prisma.stockAnalysis.create({
       data: {
         userId: user.id,
         ticker: upperTicker,
-        status: 'PROCESSING',
-      },
-    });
-
-    // 6. Fetch market data
-    const marketData = await fetchMarketData(upperTicker);
-
-    // 7. Run AI analysis
-    const result = await runStockAnalysis(marketData);
-
-    // 8. Update analysis record with results
-    await prisma.stockAnalysis.update({
-      where: { id: analysis.id },
-      data: {
         status: 'COMPLETED',
-        currentPrice: marketData.currentPrice,
-        marketCap: marketData.marketCap,
-        peRatio: marketData.peRatio,
+        recommendation: result.portfolioManager.recommendation,
+        targetPrice: result.portfolioManager.targetPrice ?? null,
+        confidenceScore: result.portfolioManager.confidenceScore,
         valuationResult: result.valuation.analysis,
         sentimentResult: result.sentiment.analysis,
         fundamentalResult: result.fundamental.analysis,
         riskResult: result.risk.analysis,
         finalReport: result.portfolioManager.finalReport,
-        recommendation: result.portfolioManager.recommendation,
-        confidenceScore: result.portfolioManager.confidenceScore,
-        targetPrice: result.portfolioManager.targetPrice,
+        currentPrice: marketData.currentPrice ?? null,
+        marketCap: marketData.marketCap ?? null,
+        peRatio: marketData.peRatio ?? null,
         processingTime: result.processingTime,
-        agentResults: JSON.parse(JSON.stringify({
-          valuation: result.valuation,
-          sentiment: result.sentiment,
-          fundamental: result.fundamental,
-          risk: result.risk,
-        })),
+        agentResults: JSON.stringify(result),
       },
     });
 
-    // 9. Increment user's analysis count
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { analysisCount: { increment: 1 } },
-    });
-
-    // 10. Return the analysis result
+    // 7. Return the analysis result
     return NextResponse.json({
       success: true,
       analysisId: analysis.id,
       result,
-      remainingAnalyses: user.isPro
-        ? 'unlimited'
-        : Math.max(0, FREE_ANALYSIS_LIMIT - (user.analysisCount + 1)),
     });
   } catch (error) {
     console.error('Analysis API error:', error);
@@ -240,7 +206,6 @@ export async function GET(
       where: {
         userId: user.id,
         ticker: ticker.toUpperCase(),
-        status: 'COMPLETED',
       },
       orderBy: { createdAt: 'desc' },
     });
