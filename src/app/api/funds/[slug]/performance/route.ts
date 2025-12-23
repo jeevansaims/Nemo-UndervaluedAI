@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
-import { finnhubGet } from "@/lib/market/finnhub";
+import { fetchDailyCloses as fetchYahooDailyCloses } from "@/lib/market/yahoo";
 import { rangeToFromTo, type RangeKey } from "@/lib/market/timeRange";
 import { getFundHoldings, normalizeWeights } from "@/lib/funds/realHoldings";
 import { getFundSnapshots, hasEnoughSnapshots } from "@/lib/funds/snapshotRepo";
-
-type FinnhubCandles = {
-  c: number[];
-  s: "ok" | "no_data";
-  t: number[];
-};
 
 type PerfPoint = {
   date: string;      // YYYY-MM-DD
@@ -16,20 +10,11 @@ type PerfPoint = {
   benchPct: number;  // percent points
 };
 
-function isoDateFromUnix(ts: number): string {
-  return new Date(ts * 1000).toISOString().slice(0, 10);
+// Use Yahoo Finance for free historical data
+async function fetchDailyCloses(symbol: string, from: number, to: number) {
+  return fetchYahooDailyCloses(symbol, from, to);
 }
 
-async function fetchDailyCloses(symbol: string, from: number, to: number) {
-  const data = await finnhubGet<FinnhubCandles>("/stock/candle", {
-    symbol,
-    resolution: "D",
-    from,
-    to,
-  });
-  if (data.s !== "ok" || !data.t?.length) return [];
-  return data.t.map((t, i) => ({ date: isoDateFromUnix(t), close: data.c[i] }));
-}
 
 // Extracted live computation logic for fallback
 async function computeLivePerformance(slug: string, range: RangeKey, benchSymbol: string) {
