@@ -13,24 +13,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Search in database first
-    const dbResults = await prisma.stock.findMany({
-      where: {
-        OR: [
-          { ticker: { contains: query.toUpperCase(), mode: 'insensitive' } },
-          { companyName: { contains: query, mode: 'insensitive' } },
-        ],
-      },
-      take: 10,
-      select: {
-        id: true,
-        ticker: true,
-        companyName: true,
-        sector: true,
-        currentPrice: true,
-        marketCap: true,
-      },
-    });
+    let dbResults: any[] = [];
+
+    // Try to search in database first (if table exists)
+    try {
+      dbResults = await prisma.stock.findMany({
+        where: {
+          OR: [
+            { ticker: { contains: query.toUpperCase(), mode: 'insensitive' } },
+            { companyName: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+        take: 10,
+        select: {
+          id: true,
+          ticker: true,
+          companyName: true,
+          sector: true,
+          currentPrice: true,
+          marketCap: true,
+        },
+      });
+    } catch (dbError) {
+      // Table doesn't exist yet - will fall back to Finnhub
+      console.log('Stock table not found, using Finnhub API fallback');
+    }
 
     // If no results in DB, fallback to Finnhub API
     if (dbResults.length === 0) {
