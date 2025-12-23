@@ -1,13 +1,13 @@
 /**
- * Sentiment Agent - Uses GPT-4 (OpenAI) for market sentiment analysis
+ * Sentiment Agent - Uses Claude (Anthropic) for market sentiment analysis
  * Analyzes news, insider trading, and market psychology
  */
 
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { MarketData, SentimentResult } from '../types';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const SENTIMENT_PROMPT = `You are an expert market sentiment analyst with deep expertise in behavioral finance and market psychology.
@@ -56,23 +56,19 @@ export async function runSentimentAgent(
       dataContext += 'Note: Limited news and insider data available. Focus on general market sentiment and technical indicators.\n';
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1500,
+      temperature: 0.4,
       messages: [
         {
-          role: 'system',
-          content: SENTIMENT_PROMPT,
-        },
-        {
           role: 'user',
-          content: `Analyze the market sentiment for the following stock:\n\n${dataContext}`,
+          content: `${SENTIMENT_PROMPT}\n\nAnalyze the market sentiment for the following stock:\n\n${dataContext}`,
         },
       ],
-      temperature: 0.4,
-      max_tokens: 1500,
     });
 
-    const analysis = completion.choices[0]?.message?.content || '';
+    const analysis = message.content[0].type === 'text' ? message.content[0].text : '';
 
     // Parse sentiment from the analysis
     const sentimentMatch = analysis.match(/overall sentiment[:\s]+(Bullish|Neutral|Bearish)/i);

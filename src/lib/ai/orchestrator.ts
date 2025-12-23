@@ -62,17 +62,7 @@ export async function runStockAnalysis(marketData: MarketData): Promise<Analysis
  * Validate that required API keys are configured
  */
 export function validateApiKeys() {
-  const errors: string[] = [];
-
-  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key_here') {
-    errors.push('OPENAI_API_KEY is not configured');
-  }
-
   if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your_anthropic_api_key_here') {
-    errors.push('ANTHROPIC_API_KEY is not configured');
-  }
-
-  if (errors.length > 0) {
-    throw new Error(`Missing API keys: ${errors.join(', ')}`);
+    throw new Error('ANTHROPIC_API_KEY is not configured. All agents now use Claude (Anthropic).');
   }
 }

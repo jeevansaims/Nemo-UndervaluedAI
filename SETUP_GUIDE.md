@@ -6,12 +6,12 @@ I've successfully built the AI-powered stock analysis feature for your undervalu
 
 ### Features Implemented
 
-1. **Multi-Agent AI System** (TypeScript)
-   - Valuation Agent (Claude/Anthropic) - Deep value analysis
-   - Sentiment Agent (GPT-4/OpenAI) - Market sentiment analysis
-   - Fundamental Agent (Claude/Anthropic) - Financial health assessment
-   - Risk Agent (GPT-4/OpenAI) - Comprehensive risk analysis
-   - Portfolio Manager (Claude/Anthropic) - Final synthesis and recommendation
+1. **Multi-Agent AI System** (TypeScript) - **All agents use Claude (Anthropic)**
+   - Valuation Agent (Claude Sonnet 4) - Deep value analysis
+   - Sentiment Agent (Claude Sonnet 4) - Market sentiment analysis
+   - Fundamental Agent (Claude Sonnet 4) - Financial health assessment
+   - Risk Agent (Claude Sonnet 4) - Comprehensive risk analysis
+   - Portfolio Manager (Claude Sonnet 4) - Final synthesis and recommendation
 
 2. **Database Schema**
    - StockAnalysis model for storing analyses
@@ -37,29 +37,23 @@ I've successfully built the AI-powered stock analysis feature for your undervalu
 
 ## Setup Instructions
 
-### 1. Get API Keys
+### 1. Get Your Anthropic API Key
 
-You need to obtain API keys from OpenAI and Anthropic:
+**All agents now use Claude (Anthropic)** - you only need ONE API key!
 
-#### OpenAI (for GPT-4)
-1. Go to https://platform.openai.com/api-keys
-2. Click "Create new secret key"
-3. Copy the key (starts with `sk-`)
-
-#### Anthropic (for Claude)
 1. Go to https://console.anthropic.com/settings/keys
 2. Click "Create Key"
 3. Copy the key (starts with `sk-ant-`)
 
-### 2. Configure Environment Variables
+### 2. Configure Environment Variable
 
-Add your API keys to the `.env` file:
+Add your Anthropic API key to the `.env` file:
 
 ```bash
-# Replace these with your actual keys
-OPENAI_API_KEY="sk-your-openai-key-here"
-ANTHROPIC_API_KEY="sk-ant-your-anthropic-key-here"
+ANTHROPIC_API_KEY="sk-ant-your-actual-anthropic-key"
 ```
+
+**Note:** The system previously used both OpenAI and Anthropic, but has been simplified to use only Claude for all agents.
 
 ### 3. Run Database Migration
 
@@ -72,9 +66,9 @@ npx prisma migrate dev
 ### 4. Install Dependencies (Already Done)
 
 Dependencies have been installed:
-- `openai` - OpenAI SDK
-- `@anthropic-ai/sdk` - Anthropic SDK
-- `ai` - Vercel AI SDK
+- `@anthropic-ai/sdk` - Anthropic Claude SDK
+- `ai` - Vercel AI SDK (for future streaming support)
+- `openai` - ~~Not used anymore~~ (can be removed)
 
 ### 5. Start the Development Server
 
@@ -103,13 +97,13 @@ Auth & Usage Check
     ↓
 Fetch Market Data (Finnhub)
     ↓
-Run 4 Agents in Parallel
-    ├─ Valuation (Claude)
-    ├─ Sentiment (GPT-4)
-    ├─ Fundamental (Claude)
-    └─ Risk (GPT-4)
+Run 4 Agents in Parallel (All Claude Sonnet 4)
+    ├─ Valuation Agent
+    ├─ Sentiment Agent
+    ├─ Fundamental Agent
+    └─ Risk Agent
     ↓
-Portfolio Manager Synthesis (Claude)
+Portfolio Manager Synthesis (Claude Sonnet 4)
     ↓
 Save to Database & Return Result
 ```
@@ -195,23 +189,25 @@ const FREE_ANALYSIS_LIMIT = 5; // Change this number
 
 ### Per Analysis (Approximate)
 
-- **Valuation Agent (Claude)**: ~$0.02-0.04
-- **Sentiment Agent (GPT-4)**: ~$0.03-0.05
-- **Fundamental Agent (Claude)**: ~$0.02-0.04
-- **Risk Agent (GPT-4)**: ~$0.03-0.05
-- **Portfolio Manager (Claude)**: ~$0.03-0.06
+All agents use **Claude Sonnet 4** (Anthropic pricing):
 
-**Total per analysis**: ~$0.13-0.24
+- **Valuation Agent**: ~$0.02-0.04
+- **Sentiment Agent**: ~$0.02-0.04
+- **Fundamental Agent**: ~$0.02-0.04
+- **Risk Agent**: ~$0.02-0.04
+- **Portfolio Manager**: ~$0.03-0.06
 
-With 5 free analyses per user, expect ~$0.65-1.20 per free user.
+**Total per analysis**: ~$0.11-0.22 (cheaper than before!)
+
+With 5 free analyses per user, expect ~$0.55-1.10 per free user.
 
 ### Cost Optimization Tips
 
-1. Use cheaper models for some agents (e.g., GPT-4 Turbo Mini)
+1. Switch to Claude Haiku for some agents (even cheaper than Sonnet 4)
 2. Reduce max_tokens for shorter responses
 3. Cache market data to avoid re-fetching
 4. Implement rate limiting
-5. Consider using Haiku (Claude's cheapest model) for some agents
+5. Use prompt caching for repeated prompts (Anthropic feature)
 
 ---
 
@@ -304,8 +300,7 @@ If you encounter issues:
 ## Credits
 
 Built with:
-- **OpenAI GPT-4** - Advanced reasoning and analysis
-- **Anthropic Claude Sonnet 4** - Deep analytical capabilities
+- **Anthropic Claude Sonnet 4** - All AI agents (simplified from mixed OpenAI/Anthropic)
 - **Finnhub API** - Real-time market data
 - **Next.js 16** - Full-stack framework
 - **Prisma** - Database ORM

@@ -1,13 +1,13 @@
 /**
- * Risk Agent - Uses GPT-4 (OpenAI) for comprehensive risk analysis
+ * Risk Agent - Uses Claude (Anthropic) for comprehensive risk analysis
  * Identifies and quantifies potential risks and downside scenarios
  */
 
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { MarketData, RiskResult } from '../types';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const RISK_PROMPT = `You are a risk management expert specializing in investment risk assessment.
@@ -49,23 +49,19 @@ ${marketData.recentNews?.length ? `Recent news indicates ${marketData.recentNews
 ${marketData.insiderTransactions?.length ? `${marketData.insiderTransactions.length} insider transactions recorded` : 'No insider transactions'}
 `;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1500,
+      temperature: 0.4,
       messages: [
         {
-          role: 'system',
-          content: RISK_PROMPT,
-        },
-        {
           role: 'user',
-          content: `Conduct a comprehensive risk analysis for:\n\n${dataContext}`,
+          content: `${RISK_PROMPT}\n\nConduct a comprehensive risk analysis for:\n\n${dataContext}`,
         },
       ],
-      temperature: 0.4,
-      max_tokens: 1500,
     });
 
-    const analysis = completion.choices[0]?.message?.content || '';
+    const analysis = message.content[0].type === 'text' ? message.content[0].text : '';
 
     // Parse risk level from the analysis
     const riskLevelMatch = analysis.match(/risk level[:\s]+(Low|Medium|High)/i);
