@@ -47,6 +47,8 @@ model User {
   alertPreferences   AlertPreferences?
   insights           InsightPost[]
   stockAnalyses      StockAnalysis[]
+  portfolio          Portfolio?
+  preferences        UserPreferences?
   // Freemium usage tracking
   analysisCount      Int         @default(0)
   isPro              Boolean     @default(false)
@@ -63,18 +65,6 @@ model VerificationToken {
 }
 
 // Phase 11B: Persistent User Data (Stub)
-model WatchlistItem {
-  id        String   @id @default(cuid())
-  userId    String
-  ticker    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, ticker])
-  @@index([userId])
-}
-
 model AlertSubscription {
   id        String   @id @default(cuid())
   userId    String
@@ -270,7 +260,6 @@ model Stock {
   currentPrice    Float
 
   // Relationships
-  analyses        StockAnalysis[]
   insiderAlerts   InsiderAlert[]
   watchlistItems  WatchlistItem[]
   portfolioHoldings PortfolioHolding[]
@@ -422,7 +411,7 @@ model AIFund {
 
   startingCapital Float      @default(100000)
   currentValue    Float
-  inception Date DateTime
+  inceptionDate   DateTime
 
   performance     AIFundPerformance[]
   holdings        AIFundHolding[]
