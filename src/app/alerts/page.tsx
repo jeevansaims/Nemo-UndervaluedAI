@@ -1,81 +1,82 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import AlertFilters from "@/components/alerts/AlertFilters";
-import AlertCard from "@/components/alerts/AlertCard";
-import type { AlertItem } from "@/lib/alerts/alertSchemas";
-import { useWatchlist } from "@/lib/watchlist/useWatchlist";
-import { useAlertSettings } from "@/lib/alerts/useAlertSettings";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import InsiderTable from "@/components/insider/InsiderTable";
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export default function AlertsPage() {
-  const { enabledTypes, setTypeFilter } = useAlertSettings();
-  // We still use local state active to control UI immediately, 
-  // but we sync with enabledTypes from hook.
-  // Actually, let's drive it from the hook entirely if possible.
-  // The hook returns 'ALL' or AlertType[]. 
-  // Our UI expects 'active' to be single string.
-  
-  // Let's assume simplest case: One active filter at a time persisted.
-  // Hook enabledTypes is AlertType[] | "ALL" -> we cast to single for UI
-  const active = Array.isArray(enabledTypes) ? enabledTypes[0] : "ALL";
-
-  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [trades, setTrades] = useState([]);
+  const [stats, setStats] = useState({ buyVolume: 0, sellVolume: 0, buyCount: 0, sellCount: 0 });
   const [loading, setLoading] = useState(true);
-  
-  const { tickers, loading: watchlistLoading } = useWatchlist();
 
   useEffect(() => {
-    if (watchlistLoading) return;
-
-    async function fetchAlerts() {
-      setLoading(true);
+    async function fetchData() {
       try {
-        const query = tickers.length ? `?tickers=${tickers.join(",")}` : "";
-        const res = await fetch(`/api/alerts${query}`);
-        if (!res.ok) throw new Error("Failed to fetch");
+        const res = await fetch(`${BASE_URL}/api/insider-alerts`);
         const data = await res.json();
-        setAlerts(data.alerts || []);
+        setTrades(data.trades);
+        setStats(data.stats);
       } catch (e) {
-        console.error(e);
+        console.error("Failed to load insider alerts", e);
       } finally {
         setLoading(false);
       }
     }
-    fetchAlerts();
-  }, [tickers, watchlistLoading]);
-
-  const filtered = useMemo(() => {
-    if (active === "ALL") return alerts;
-    return alerts.filter((a) => a.type === active);
-  }, [alerts, active]);
+    fetchData();
+  }, []);
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
+    <main className="min-h-screen bg-[#232323] text-white">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-xs text-white/50">Monitoring {tickers.length ? tickers.join(", ") : "Top Market"}</div>
-            <h1 className="mt-2 text-3xl font-semibold">Alerts</h1>
-            <p className="mt-2 text-sm text-white/60">
-              Real-time feed from Finnhub (News, Earnings).
-            </p>
-          </div>
+        <div className="flex items-center gap-2 text-sm text-white/50 mb-6">
+          <Link href="/" className="hover:text-white transition">Home</Link>
+          <span>›</span>
+          <span className="text-white">Alerts</span>
+        </div>
 
-          <AlertFilters active={active} onChange={setTypeFilter} />
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold">Insider Trading Alerts</h1>
+          <p className="mt-2 text-white/60">
+            Real-time tracking of high-value insider transactions. Detect cluster buying and significant sell-offs.
+          </p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="p-4 rounded-xl border border-[#404040] bg-[#313131]">
+            <div className="text-sm text-white/40">24h Insider Buying</div>
+            <div className="text-2xl font-bold text-emerald-400">
+              ${(stats.buyVolume / 1000000).toFixed(1)}M
+            </div>
+          </div>
+          <div className="p-4 rounded-xl border border-[#404040] bg-[#313131]">
+            <div className="text-sm text-white/40">buying Transactions</div>
+            <div className="text-2xl font-bold text-white">
+              {stats.buyCount}
+            </div>
+          </div>
+          <div className="p-4 rounded-xl border border-[#404040] bg-[#313131]">
+            <div className="text-sm text-white/40">24h Insider Selling</div>
+            <div className="text-2xl font-bold text-rose-400">
+              ${(stats.sellVolume / 1000000).toFixed(1)}M
+            </div>
+          </div>
+          <div className="p-4 rounded-xl border border-[#404040] bg-[#313131]">
+            <div className="text-sm text-white/40">Selling Transactions</div>
+            <div className="text-2xl font-bold text-white">
+              {stats.sellCount}
+            </div>
+          </div>
         </div>
 
         {loading ? (
-          <div className="mt-12 text-center text-white/40">Loading latest signals...</div>
+           <div className="h-64 flex items-center justify-center text-white/30">
+             Loading insider data...
+           </div>
         ) : (
-          <div className="mt-8 grid gap-4">
-            {filtered.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-10 text-center text-white/40">
-                No alerts found. Try adding more tickers to your watchlist.
-              </div>
-            ) : (
-              filtered.map((a) => <AlertCard key={a.id} a={a} />)
-            )}
-          </div>
+          <InsiderTable trades={trades} />
         )}
       </div>
     </main>

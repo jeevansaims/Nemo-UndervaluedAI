@@ -106,6 +106,17 @@ export default function AIAnalysisPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
+      {/* Breadcrumbs */}
+      {result && (
+        <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+          <a href="/" className="hover:text-foreground transition">
+            Home
+          </a>
+          <span>›</span>
+          <span className="text-foreground font-medium">{result.ticker}</span>
+        </div>
+      )}
+
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold mb-2">AI Stock Analysis</h1>

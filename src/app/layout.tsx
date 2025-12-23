@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Undervalued.ai | AI Stock Analysis",
+  title: "Nemo-Undervalued | AI Stock Analysis",
   description: "AI-powered stock analysis and hedge fund tracking",
 };
 

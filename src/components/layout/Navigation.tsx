@@ -13,8 +13,8 @@ export default function Navigation() {
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4">
         {/* Logo */}
-        <Link href="/" className="text-xl font-semibold text-white hover:text-white/80">
-          Undervalued.ai
+        <Link href="/" className="text-lg font-semibold text-[#B6B6B6] hover:text-white">
+          Nemo-Undervalued
         </Link>
 
         {/* Right side */}
