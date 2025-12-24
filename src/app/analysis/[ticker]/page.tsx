@@ -7,7 +7,8 @@ import NewsPanel from "@/components/analysis/NewsPanel";
 // Force server component to fetch freshly (or use revalidate)
 export const dynamic = "force-dynamic";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
 // Helper to format large numbers
 const fmtB = (n: number) => (n / 1000).toFixed(1) + "B"; // input usually in millions for Finnhub? No, marketCap is usually in millions.
