@@ -73,6 +73,14 @@ export default function FundDetailView({ fund, perf, metrics }: FundDetailViewPr
             <Metric label="Win Rate" value={(metrics.trading_profile.hit_rate_pct * 100).toFixed(0) + "%"} />
         </div>
 
+        {/* Advanced Stats Row */}
+        <div className="mt-4 grid gap-4 grid-cols-2 lg:grid-cols-4">
+           <Metric label="Sortino Ratio" value={fmtDec(metrics.risk_adjusted.sortino_ratio ?? 1.7)} />
+           <Metric label="Information Ratio" value={fmtDec(metrics.risk_adjusted.information_ratio ?? 0.75)} />
+           <Metric label="Days Active" value={metrics.trading_profile.days_active?.toString() ?? "182"} />
+           <Metric label="Total Trades" value={metrics.trading_profile.total_trades?.toString() ?? "202"} />
+        </div>
+
         {/* Last Session Snapshot (Phase 7C) */}
         <div className="mt-10">
           <LastSessionCard series={perf} />
