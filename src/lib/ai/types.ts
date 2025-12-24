@@ -67,6 +67,35 @@ export interface RiskResult extends AgentResult {
   riskFactors: string[];
 }
 
+export interface TechnicalResult extends AgentResult {
+  agentName: 'Technical';
+  trend: 'Bullish' | 'Neutral' | 'Bearish';
+  momentum: 'Strong' | 'Moderate' | 'Weak';
+  supportLevel?: number;
+  resistanceLevel?: number;
+}
+
+export interface PeerComparisonResult extends AgentResult {
+  agentName: 'PeerComparison';
+  relativeValuation: 'Undervalued' | 'FairlyValued' | 'Overvalued';
+  competitivePosition: 'Leader' | 'Strong' | 'Average' | 'Weak';
+  topPeers: string[];
+}
+
+export interface MacroResult extends AgentResult {
+  agentName: 'Macro';
+  economicOutlook: 'Favorable' | 'Neutral' | 'Unfavorable';
+  sectorTrend: 'Tailwind' | 'Neutral' | 'Headwind';
+  interestRateSensitivity: 'High' | 'Medium' | 'Low';
+}
+
+export interface EarningsCallResult extends AgentResult {
+  agentName: 'EarningsCall';
+  managementTone: 'Confident' | 'Cautious' | 'Uncertain';
+  guidanceDirection: 'Raising' | 'Maintaining' | 'Lowering';
+  keyThemes: string[];
+}
+
 export interface PortfolioManagerResult {
   finalReport: string;
   recommendation: 'BUY' | 'HOLD' | 'SELL';
@@ -83,6 +112,11 @@ export interface AnalysisResult {
   sentiment: SentimentResult;
   fundamental: FundamentalResult;
   risk: RiskResult;
+  technical?: TechnicalResult;
+  peerComparison?: PeerComparisonResult;
+  macro?: MacroResult;
+  earningsCall?: EarningsCallResult;
   portfolioManager: PortfolioManagerResult;
   processingTime: number; // milliseconds
 }
+
