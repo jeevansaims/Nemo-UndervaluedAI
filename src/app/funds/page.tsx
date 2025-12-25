@@ -2,6 +2,9 @@ import Link from "next/link";
 import FundCard from "@/components/funds/FundCard";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - this page needs database access at runtime, not build time
+export const dynamic = 'force-dynamic';
+
 export default async function FundsPage() {
   // Fetch fund data directly from database
   const funds = await prisma.fund.findMany({
