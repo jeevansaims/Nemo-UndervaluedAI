@@ -4,19 +4,11 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { MarketData, AgentResult } from '../types';
+import { MarketData, AgentResult, TechnicalResult } from '../types';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
-
-export interface TechnicalResult extends AgentResult {
-  agentName: 'Technical';
-  trend: 'Bullish' | 'Neutral' | 'Bearish';
-  momentum: 'Strong' | 'Moderate' | 'Weak';
-  supportLevel?: number;
-  resistanceLevel?: number;
-}
 
 const TECHNICAL_PROMPT = `You are an expert technical analyst specializing in equity markets.
 
