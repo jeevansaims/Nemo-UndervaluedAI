@@ -56,14 +56,27 @@ interface AnalysisResult {
     positionSize?: number;
     positionValue?: number;
     portfolioWeight?: number;
+    suggestedStopLoss?: number;
+    volatility?: number;
   };
   portfolioManager: {
     finalReport: string;
+    analysis?: string; // Add the string field for full text
     recommendation: 'BUY' | 'HOLD' | 'SELL';
     confidenceScore: number;
     targetPrice?: number;
     timeHorizon: string;
     keyTakeaways: string[];
+    tradeSetup?: {
+      suggestedAction: 'BUY' | 'SELL' | 'HOLD';
+      entryPrice: number;
+      targetPrice: number;
+      stopLoss: number;
+      riskRewardRatio: number;
+      upside: number; // percentage
+      downside: number; // percentage
+      reasoning: string;
+    };
   };
   processingTime: number;
 }
@@ -255,7 +268,7 @@ export default function AIAnalysisPage() {
                 <div>
                   <h4 className="font-semibold mb-2">Key Takeaways</h4>
                   <ul className="list-disc list-inside space-y-1">
-                    {result.portfolioManager.keyTakeaways.map((takeaway, idx) => (
+                    {(result.portfolioManager.keyTakeaways || []).map((takeaway, idx) => (
                       <li key={idx} className="text-sm">
                         {takeaway}
                       </li>
@@ -264,7 +277,74 @@ export default function AIAnalysisPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+            </Card>
+
+          {/* Trade Setup Card */}
+          {result.portfolioManager.tradeSetup && (
+            <Card className="border-2 border-blue-500/20 bg-blue-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6 text-blue-500" />
+                  Trade Setup
+                </CardTitle>
+                <CardDescription>
+                  Synthesized from Technical Support/Resistance and Volatility Analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {/* Entry */}
+                  <div className="p-4 bg-background rounded-lg border">
+                    <div className="text-sm text-muted-foreground mb-1">Entry Zone</div>
+                    <div className="text-2xl font-bold">
+                      ${result.portfolioManager.tradeSetup.entryPrice.toFixed(2)}
+                    </div>
+                    <Badge variant="outline" className="mt-2">Current Price</Badge>
+                  </div>
+
+                  {/* Stop Loss */}
+                  <div className="p-4 bg-background rounded-lg border border-red-200 dark:border-red-900/50">
+                    <div className="text-sm text-muted-foreground mb-1">Stop Loss</div>
+                    <div className="text-2xl font-bold text-red-500">
+                      ${result.portfolioManager.tradeSetup.stopLoss.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                      <TrendingDown className="h-3 w-3" />
+                      {result.portfolioManager.tradeSetup.downside.toFixed(2)}% Downside
+                    </div>
+                  </div>
+
+                  {/* Target */}
+                  <div className="p-4 bg-background rounded-lg border border-green-200 dark:border-green-900/50">
+                    <div className="text-sm text-muted-foreground mb-1">Target Price</div>
+                    <div className="text-2xl font-bold text-green-500">
+                      ${result.portfolioManager.tradeSetup.targetPrice.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-green-500 mt-1 flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" />
+                      {result.portfolioManager.tradeSetup.upside.toFixed(2)}% Upside
+                    </div>
+                  </div>
+
+                  {/* Risk/Reward */}
+                  <div className="p-4 bg-background rounded-lg border">
+                    <div className="text-sm text-muted-foreground mb-1">Risk / Reward</div>
+                    <div className="text-2xl font-bold">
+                      1 : {result.portfolioManager.tradeSetup.riskRewardRatio}
+                    </div>
+                    <div className="w-full bg-secondary h-2 mt-3 rounded-full overflow-hidden flex">
+                      <div className="bg-red-500 h-full w-1/4" />
+                      <div className="bg-green-500 h-full w-3/4" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-sm text-muted-foreground bg-background p-3 rounded border">
+                  <strong>Strategy:</strong> {result.portfolioManager.tradeSetup.reasoning}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Detailed Analysis Tabs */}
           <Tabs defaultValue="final" className="w-full">

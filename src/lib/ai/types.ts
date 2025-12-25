@@ -79,20 +79,38 @@ export interface FundamentalResult extends AgentResult {
   growthPotential: 'High' | 'Medium' | 'Low';
 }
 
-export interface RiskResult extends AgentResult {
-  agentName: 'Risk';
+export interface TradeSetup {
+  suggestedAction: 'BUY' | 'SELL' | 'HOLD';
+  entryPrice: number;
+  targetPrice: number;
+  stopLoss: number;
+  riskRewardRatio: number;
+  upside: number; // percentage
+  downside: number; // percentage
+  reasoning: string;
+}
+
+export interface RiskResult {
+  analysis: string; // Detailed risk analysis text
   riskLevel: 'Low' | 'Medium' | 'High';
   riskFactors: string[];
+  maxDrawdown?: number;
+  volatility?: number; // Annualized volatility
+  sharpeRatio?: number;
+  suggestedStopLoss?: number; // Volatility-based stop level
   // Position Sizing
-  positionSize?: number;    // Number of shares to buy
-  positionValue?: number;   // Dollar value of position
-  portfolioWeight?: number; // % of portfolio
+  positionSize?: number; // Number of shares
+  positionValue?: number; // Dollar value
+  portfolioWeight?: number; // Percentage of portfolio
+  score?: number; // 0-100 rating
+  timestamp?: Date;
 }
 
 export interface TechnicalResult extends AgentResult {
   agentName: 'Technical';
   trend: 'Bullish' | 'Neutral' | 'Bearish';
   momentum: 'Strong' | 'Moderate' | 'Weak';
+  signal: 'Bullish' | 'Bearish' | 'Neutral'; // Added signal field
   supportLevel?: number;
   resistanceLevel?: number;
 }
@@ -119,12 +137,24 @@ export interface EarningsCallResult extends AgentResult {
 }
 
 export interface PortfolioManagerResult {
-  finalReport: string;
-  recommendation: 'BUY' | 'HOLD' | 'SELL';
-  confidenceScore: number; // 0-100
+  agentName?: string;
+  timestamp?: Date;
+  finalReport?: string; // Optional legacy field
+  analysis?: string; // New field matching other agents
+  summary?: string;
+  rating: 'BUY' | 'HOLD' | 'SELL';
+  recommendation?: 'BUY' | 'HOLD' | 'SELL'; // Optional legacy field
+  confidence: number;
+  confidenceScore?: number; // Optional legacy field
   targetPrice?: number;
   timeHorizon: string;
-  keyTakeaways: string[];
+  investmentThesis?: string[];
+  keyTakeaways?: string[]; // Optional legacy field
+  catalysts?: string[];
+  riskFactors?: string[];
+  riskLevel?: string;
+  quantity?: number;
+  tradeSetup?: TradeSetup;
 }
 
 export interface WarrenBuffettResult extends AgentResult {

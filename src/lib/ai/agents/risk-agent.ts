@@ -81,32 +81,38 @@ ${marketData.insiderTransactions?.length ? `${marketData.insiderTransactions.len
     const score = riskLevel === 'Low' ? 80 : riskLevel === 'Medium' ? 50 : 20;
 
     // POSITION SIZING CALCULATION
-    // Based on Kelly Criterion / Fixed Fractional approach
-    // Portfolio Size: $100,000 (configurable)
-    // Risk per Trade: 2% of portfolio = $2,000
-    // Position Size = Risk Amount / (Current Price * Volatility Factor)
-    const portfolioSize = 100000; // $100k default portfolio
-    const riskPerTrade = 0.02; // 2% risk per trade
-    const riskAmount = portfolioSize * riskPerTrade; // $2,000
+    // --- NEW: Volatility & Stop Loss Calculation ---
+    // We need historical prices to calculate volatility.
+    // Since MarketData might not have candle history, we'll estimate from Beta 
+    // or use a simplified mock volatility if history is missing.
+    // In a production env, we'd pass price history to this agent.
     
-    // Volatility factor based on beta (higher beta = smaller position)
-    const beta = marketData.beta || 1;
-    const volatilityFactor = Math.max(0.5, Math.min(2, beta)); // Clamp between 0.5 and 2
+    // Estimate Annualized Volatility from Beta (heuristic)
+    // Beta 1.0 ≈ 20% volatility (SPY avg)
+    // Formula: Vol ≈ Beta * 0.20
+    const estimatedVolatility = (marketData.beta || 1.0) * 0.20;
     
-    // Risk-adjusted position sizing
-    // Lower risk level = larger position, higher risk = smaller position
-    const riskMultiplier = riskLevel === 'Low' ? 1.5 : riskLevel === 'Medium' ? 1.0 : 0.5;
+    // Calculate Volatility-Based Stop Loss
+    // Standard approach: 2 * ATR or 2 * Standard Deviations
+    // We'll use: Current Price * (1 - (Volatility / sqrt(252)) * 3)
+    // This sets stop at ~3 daily standard deviations away
+    const dailyVolatility = estimatedVolatility / Math.sqrt(252);
+    const stopLossDistance = 3 * dailyVolatility;
+    const suggestedStopLoss = marketData.currentPrice * (1 - stopLossDistance);
     
-    // Calculate max position value and shares
-    const maxPositionValue = (riskAmount / volatilityFactor) * riskMultiplier * 10; // Scale up for reasonable position
-    const positionSize = Math.floor(maxPositionValue / marketData.currentPrice);
+    // Position Sizing (Kelly / Volatility Adjusted)
+    const portfolioSize = 100000;
+    const riskPerTrade = 0.02; // 2% risk
+    const riskAmount = portfolioSize * riskPerTrade;
+    
+    // Calculate shares: Risk Amount / (Price - StopLoss)
+    const riskPerShare = marketData.currentPrice - suggestedStopLoss;
+    const positionSize = Math.floor(riskAmount / riskPerShare);
     const positionValue = positionSize * marketData.currentPrice;
     const portfolioWeight = (positionValue / portfolioSize) * 100;
 
     return {
-      agentName: 'Risk',
       analysis,
-      keyPoints: riskFactors.length > 0 ? riskFactors : ['See full analysis for risk assessment'],
       riskLevel,
       riskFactors,
       score,
@@ -115,6 +121,8 @@ ${marketData.insiderTransactions?.length ? `${marketData.insiderTransactions.len
       positionSize,
       positionValue,
       portfolioWeight,
+      volatility: estimatedVolatility,
+      suggestedStopLoss: parseFloat(suggestedStopLoss.toFixed(2)),
     };
   } catch (error) {
     console.error('Risk agent error:', error);

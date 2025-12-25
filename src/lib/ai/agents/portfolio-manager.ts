@@ -129,113 +129,132 @@ TECHNICAL ANALYSIS:
 ${technicalResult.analysis}
 Trend: ${technicalResult.trend}
 Momentum: ${technicalResult.momentum}
-Support: $${technicalResult.supportLevel || 'N/A'}
-Resistance: $${technicalResult.resistanceLevel || 'N/A'}
+Signal: ${technicalResult.signal}
 `;
     }
-
-    if (peerComparisonResult) {
-      agentSummaries += `
----
-
-PEER COMPARISON ANALYSIS:
-${peerComparisonResult.analysis}
-Relative Valuation: ${peerComparisonResult.relativeValuation}
-Competitive Position: ${peerComparisonResult.competitivePosition}
-Top Peers: ${peerComparisonResult.topPeers.join(', ')}
-`;
-    }
-
-    if (macroResult) {
-      agentSummaries += `
----
-
-MACRO-ENVIRONMENTAL ANALYSIS:
-${macroResult.analysis}
-Economic Outlook: ${macroResult.economicOutlook}
-Sector Trend: ${macroResult.sectorTrend}
-Interest Rate Sensitivity: ${macroResult.interestRateSensitivity}
-`;
-    }
-
+    
     if (earningsCallResult) {
       agentSummaries += `
 ---
 
 EARNINGS CALL ANALYSIS:
 ${earningsCallResult.analysis}
-Management Tone: ${earningsCallResult.managementTone}
-Guidance Direction: ${earningsCallResult.guidanceDirection}
-Key Themes: ${earningsCallResult.keyThemes.join(', ')}
+`;
+    }
+    
+    if (peerComparisonResult) {
+      agentSummaries += `
+---
+
+PEER COMPARISON:
+${peerComparisonResult.analysis}
+`;
+    }
+    
+    if (macroResult) {
+      agentSummaries += `
+---
+
+MACRO CONTEXT:
+${macroResult.analysis}
 `;
     }
 
-    // Add ALL persona agent summaries
-    if (personaResults) {
-      for (const [agentName, result] of Object.entries(personaResults)) {
-        if (result && result.analysis) {
-          agentSummaries += `
+    agentSummaries += `
 ---
 
-${agentName.toUpperCase()} ANALYSIS:
-${result.analysis}
-Signal: ${result.signal || 'N/A'}
-Confidence: ${result.confidence || 'N/A'}%
+PERSONA AGENT SUMMARIES:
 `;
-        }
-      }
+
+    // Add persona agent summaries if available
+    if (personaResults) {
+      Object.entries(personaResults).forEach(([name, result]) => {
+        const signal = (result as any).signal || 'Neutral';
+        const confidence = (result as any).confidence || 0;
+        agentSummaries += `- ${name}: ${signal} (${confidence}% confidence)\n`;
+      });
     }
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-3-haiku-20240307', // Using Haiku for now (Sonnet models not available)
       max_tokens: 3000,
       temperature: 0.1,
       messages: [
         {
           role: 'user',
-          content: `${PORTFOLIO_MANAGER_PROMPT}\n\nStock: ${marketData.ticker}\nCurrent Price: $${marketData.currentPrice}\n\nReview the following 9 analyst reports and provide your final investment recommendation:\n\n${agentSummaries}`,
+          content: `${PORTFOLIO_MANAGER_PROMPT}\n\nReview the following agent analyses and provide your portfolio management decision along with a concrete TRADE SETUP:\n\n${agentSummaries}`,
         },
       ],
     });
 
-    const finalReport = message.content[0].type === 'text' ? message.content[0].text : '';
+    const analysis = message.content[0].type === 'text' ? message.content[0].text : '';
 
-    // Parse recommendation and confidence
-    const recommendationMatch = finalReport.match(/recommendation[:\s]+(BUY|HOLD|SELL)/i);
-    const confidenceMatch = finalReport.match(/confidence(?:\s+score)?[:\s]+(\d+)(?:\/100|%)?/i) ||
-                           finalReport.match(/(\d+)(?:\/100|%)?[\s]*confidence/i);
-    const targetPriceMatch = finalReport.match(/target(?:\s+price)?[:\s]+\$?([\d,.]+)/i);
-    const timeHorizonMatch = finalReport.match(/time\s+horizon[:\s]+([^\n]+)/i);
+    // Parse main fields
+    const recommendationMatch = analysis.match(/Recommendation:? (BUY|HOLD|SELL)/i);
+    const confidenceMatch = analysis.match(/Confidence:? (\d+)/i);
+    const targetPriceMatch = analysis.match(/Target Price:? \$?([\d,.]+)/i);
+    const timeHorizonMatch = analysis.match(/Time Horizon:? ([^\n]+)/i);
 
     const recommendation = recommendationMatch
-      ? (recommendationMatch[1].toUpperCase() as 'BUY' | 'HOLD' | 'SELL')
+      ? (recommendationMatch[1].toUpperCase() as 'BUY' | 'SELL' | 'HOLD')
       : 'HOLD';
-    const confidenceScore = confidenceMatch ? parseInt(confidenceMatch[1]) : 50;
-    const targetPrice = targetPriceMatch
-      ? parseFloat(targetPriceMatch[1].replace(/,/g, ''))
-      : valuationResult.targetPrice;
+    const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 50;
+    const targetPrice = targetPriceMatch ? parseFloat(targetPriceMatch[1].replace(/,/g, '')) : undefined;
     const timeHorizon = timeHorizonMatch ? timeHorizonMatch[1].trim() : '12 months';
 
-    console.log(`[Portfolio Manager] ${marketData.ticker}: ${recommendation} @ ${confidenceScore}% confidence`);
+    // NEW: Parse Trade Setup
+    const entryMatch = analysis.match(/Entry Price:? \$?([\d,.]+)/i);
+    const stopLossMatch = analysis.match(/Stop Loss:? \$?([\d,.]+)/i);
+    const tradeTargetMatch = analysis.match(/Trade Target:? \$?([\d,.]+)/i);
+
+    let tradeSetup: any = undefined;
+
+    if (stopLossMatch && tradeTargetMatch) {
+      const entry = entryMatch ? parseFloat(entryMatch[1].replace(/,/g, '')) : marketData.currentPrice;
+      const stop = parseFloat(stopLossMatch[1].replace(/,/g, ''));
+      const target = parseFloat(tradeTargetMatch[1].replace(/,/g, ''));
+
+      const upside = ((target - entry) / entry) * 100;
+      const downside = ((entry - stop) / entry) * 100;
+      const riskReward = downside !== 0 ? Math.abs(upside / downside) : 0;
+
+      tradeSetup = {
+        suggestedAction: recommendation,
+        entryPrice: entry,
+        targetPrice: target,
+        stopLoss: stop,
+        riskRewardRatio: parseFloat(riskReward.toFixed(2)),
+        upside: parseFloat(upside.toFixed(2)),
+        downside: parseFloat(downside.toFixed(2)),
+        reasoning: "Synthesized from Technical Support/Resistance and Volatility Analysis."
+      };
+    }
 
     // Extract key takeaways
-    const keyTakeaways = finalReport
-      .split('\n')
-      .filter(line => line.match(/^[-•*\d.]/))
+    const keyTakeaways = analysis
+      .split(/Key Takeaways:?/i)[1]
+      ?.split('\n')
+      .filter(line => line.trim().match(/^[-•*\d.]/))
       .map(line => line.replace(/^[-•*\d.]\s*/, '').trim())
-      .filter(line => line.length > 15)
-      .slice(0, 5);
+      .filter(line => line.length > 10)
+      .slice(0, 5) || [];
 
     return {
-      finalReport,
-      recommendation,
-      confidenceScore,
-      targetPrice,
-      timeHorizon,
-      keyTakeaways: keyTakeaways.length > 0 ? keyTakeaways : ['See full report for investment thesis'],
+      timestamp: new Date(),
+      rating: recommendation,
+      confidence: confidence,
+      summary: analysis.split('Key Takeaways')[0].trim(),
+      analysis: analysis,
+      targetPrice: targetPrice,
+      timeHorizon: timeHorizon,
+      riskLevel: riskResult.riskLevel,
+      investmentThesis: keyTakeaways,
+      catalysts: [],
+      riskFactors: riskResult.riskFactors,
+      tradeSetup: tradeSetup
     };
   } catch (error) {
     console.error('Portfolio manager error:', error);
-    throw new Error(`Portfolio manager synthesis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`Portfolio manager analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

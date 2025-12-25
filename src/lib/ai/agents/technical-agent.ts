@@ -91,6 +91,7 @@ Note: Analyze based on typical technical patterns for this stock and sector.
       momentum,
       supportLevel: supportMatch ? parseFloat(supportMatch[1].replace(/,/g, '')) : undefined,
       resistanceLevel: resistanceMatch ? parseFloat(resistanceMatch[1].replace(/,/g, '')) : undefined,
+      signal: trend, // signal matches trend for now
       score: trend === 'Bullish' ? 70 : trend === 'Bearish' ? 30 : 50,
       timestamp: new Date(),
     };
