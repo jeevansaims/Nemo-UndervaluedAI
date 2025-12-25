@@ -48,7 +48,7 @@ export default function NewInsightPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#232323] text-white">
+    <main className="min-h-screen bg-[#303741] text-white">
       <div className="mx-auto max-w-4xl px-6 py-10">
         <div className="flex items-center justify-between mb-8">
           <div>

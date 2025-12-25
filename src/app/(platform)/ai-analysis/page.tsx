@@ -34,11 +34,28 @@ interface AnalysisResult {
     financialHealth: 'Strong' | 'Moderate' | 'Weak';
     growthPotential: 'High' | 'Medium' | 'Low';
   };
+  warrenBuffett?: {
+    analysis: string;
+    signal: 'Bullish' | 'Bearish' | 'Neutral';
+    confidence: number;
+    moatScore: number;
+    intrinsicValue: number;
+    marginOfSafety: number;
+  };
+  personaAgents?: Record<string, {
+    agentName: string;
+    analysis: string;
+    signal: 'Bullish' | 'Bearish' | 'Neutral';
+    confidence: number;
+  }>;
   risk: {
     analysis: string;
     keyPoints: string[];
     riskLevel: 'Low' | 'Medium' | 'High';
     riskFactors: string[];
+    positionSize?: number;
+    positionValue?: number;
+    portfolioWeight?: number;
   };
   portfolioManager: {
     finalReport: string;
@@ -251,13 +268,107 @@ export default function AIAnalysisPage() {
 
           {/* Detailed Analysis Tabs */}
           <Tabs defaultValue="final" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+           <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="final">Final Report</TabsTrigger>
+              <TabsTrigger value="warren">Warren Buffett</TabsTrigger>
+              <TabsTrigger value="personas">Investor Analysts</TabsTrigger>
               <TabsTrigger value="valuation">Valuation</TabsTrigger>
               <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
               <TabsTrigger value="fundamental">Fundamentals</TabsTrigger>
-              <TabsTrigger value="risk">Risk</TabsTrigger>
+              <TabsTrigger value="risk">Risk & Position</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="warren">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Warren Buffett Analysis</CardTitle>
+                  <CardDescription>Moat, Consistency, and Intrinsic Value Analysis</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {result.warrenBuffett ? (
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-4 text-sm">
+                        <div>
+                          <span className="font-medium">Signal:</span>{' '}
+                          <Badge 
+                            variant={
+                              result.warrenBuffett.signal === 'Bullish' ? 'default' : 
+                              result.warrenBuffett.signal === 'Bearish' ? 'destructive' : 'secondary'
+                            }
+                            className={
+                              result.warrenBuffett.signal === 'Bullish' ? 'bg-green-600' : ''
+                            }
+                          >
+                            {result.warrenBuffett.signal}
+                          </Badge>
+                        </div>
+                        <div>
+                          <span className="font-medium">Confidence:</span>{' '}
+                          {result.warrenBuffett.confidence}%
+                        </div>
+                        <div>
+                          <span className="font-medium">Moat Score:</span>{' '}
+                          <Badge variant="outline">{result.warrenBuffett.moatScore}/5</Badge>
+                        </div>
+                         <div>
+                          <span className="font-medium">Intrinsic Value:</span>{' '}
+                          ${(result.warrenBuffett.intrinsicValue / 1e9).toFixed(2)}B
+                        </div>
+                        <div>
+                          <span className="font-medium">Margin of Safety:</span>{' '}
+                          <span className={result.warrenBuffett.marginOfSafety > 0 ? 'text-green-600' : 'text-red-600'}>
+                             {(result.warrenBuffett.marginOfSafety * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="prose prose-sm max-w-none">
+                        <pre className="whitespace-pre-wrap font-sans">{result.warrenBuffett.analysis}</pre>
+                      </div>
+                    </div>
+                  ) : (
+                     <div className="text-muted-foreground italic">Analysis not available</div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="personas">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Investor Analyst Signals</CardTitle>
+                  <CardDescription>How 12 famous investors would view this stock</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {result.personaAgents ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {Object.entries(result.personaAgents).map(([key, agent]) => (
+                        <div key={key} className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-sm capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </span>
+                            <Badge 
+                              variant={
+                                agent.signal === 'Bullish' ? 'default' : 
+                                agent.signal === 'Bearish' ? 'destructive' : 'secondary'
+                              }
+                              className={agent.signal === 'Bullish' ? 'bg-green-600' : ''}
+                            >
+                              {agent.signal}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Confidence: {agent.confidence}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground italic">Persona analyses not available</div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="final">
               <Card>
@@ -385,6 +496,26 @@ export default function AIAnalysisPage() {
                         </Badge>
                       </div>
                     </div>
+                    {/* Position Sizing Section */}
+                    {result.risk.positionSize && (
+                      <div className="bg-muted/50 p-4 rounded-lg mt-4">
+                        <h4 className="font-semibold mb-3">📊 Position Sizing (for $100k portfolio)</h4>
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Suggested Shares:</span>
+                            <div className="text-xl font-bold">{result.risk.positionSize.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Position Value:</span>
+                            <div className="text-xl font-bold">${result.risk.positionValue?.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Portfolio Weight:</span>
+                            <div className="text-xl font-bold">{result.risk.portfolioWeight?.toFixed(1)}%</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <h4 className="font-semibold mb-2">Key Risk Factors</h4>
                       <ul className="list-disc list-inside space-y-1">

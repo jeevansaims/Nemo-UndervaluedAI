@@ -2,6 +2,22 @@
  * AI Agent Types for Stock Analysis
  */
 
+export interface FinancialPeriod {
+  date: string;
+  revenue?: number;
+  netIncome?: number;
+  eps?: number;
+  freeCashFlow?: number;
+  grossMargin?: number;
+  operatingMargin?: number;
+  roe?: number;
+  roic?: number;
+  debtToEquity?: number;
+  bookValuePerShare?: number;
+  currentRatio?: number;
+  assetTurnover?: number;
+}
+
 export interface MarketData {
   ticker: string;
   currentPrice: number;
@@ -15,6 +31,8 @@ export interface MarketData {
   freeCashFlow?: number;
   dividendYield?: number;
   beta?: number;
+  // Historical data for quantitative analysis
+  financialHistory?: FinancialPeriod[];
   // News and sentiment data
   recentNews?: Array<{
     headline: string;
@@ -65,6 +83,10 @@ export interface RiskResult extends AgentResult {
   agentName: 'Risk';
   riskLevel: 'Low' | 'Medium' | 'High';
   riskFactors: string[];
+  // Position Sizing
+  positionSize?: number;    // Number of shares to buy
+  positionValue?: number;   // Dollar value of position
+  portfolioWeight?: number; // % of portfolio
 }
 
 export interface TechnicalResult extends AgentResult {
@@ -105,6 +127,23 @@ export interface PortfolioManagerResult {
   keyTakeaways: string[];
 }
 
+export interface WarrenBuffettResult extends AgentResult {
+  agentName: 'WarrenBuffett';
+  signal: 'Bullish' | 'Bearish' | 'Neutral';
+  confidence: number;
+  moatScore: number;
+  intrinsicValue: number;
+  marginOfSafety: number;
+}
+
+// Generic interface for all persona agents
+export interface PersonaAgentResult {
+  agentName: string;
+  analysis: string;
+  signal: 'Bullish' | 'Bearish' | 'Neutral';
+  confidence: number;
+}
+
 export interface AnalysisResult {
   ticker: string;
   marketData: MarketData;
@@ -116,6 +155,8 @@ export interface AnalysisResult {
   peerComparison?: PeerComparisonResult;
   macro?: MacroResult;
   earningsCall?: EarningsCallResult;
+  warrenBuffett?: WarrenBuffettResult;
+  personaAgents?: Record<string, PersonaAgentResult>;
   portfolioManager: PortfolioManagerResult;
   processingTime: number; // milliseconds
 }

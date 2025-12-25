@@ -231,3 +231,102 @@ export const FUND_CONFIGS = {
     },
   },
 };
+
+/**
+ * Get fund methodology description
+ */
+export function getFundMethodology(fundSlug: string) {
+  const methodologies: Record<string, any> = {
+    'ai-growth-fund': {
+      universe: 'NYSE and Nasdaq equities with market capitalization ≥ $1B, focusing on Technology, Consumer Cyclical, and Communication Services sectors.',
+      selection: 'The process begins with an initial screen on metrics such as revenue growth (≥20% YoY), P/S ratio, and innovation indicators. An AI-based analysis then identifies Strong Buy candidates with high growth potential, typically around 100 to 200 stocks. The final portfolio is constructed from these candidates via a multi-step AI selection process.',
+      rebalancing: 'Triggered by either macroeconomic research, sector rotation signals, or changes in internal stock ratings. On trigger, the system performs a full portfolio rebalance with risk-adjusted position sizing.',
+    },
+    'ai-value-fund': {
+      universe: 'NYSE and Nasdaq equities, excluding Financial Services and Real Estate sectors. Market capitalization ≥ $500M.',
+      selection: 'Initial screening on value metrics: P/E < market average, P/B < 3, positive free cash flow. AI analysis evaluates balance sheet quality, earnings consistency, and catalyst potential to identify undervalued opportunities.',
+      rebalancing: 'Quarterly rebalancing or triggered by significant valuation changes (±20%). Positions are sized based on discount to intrinsic value and quality scores.',
+    },
+    'ai-dividend-fund': {
+      universe: 'Large-cap US equities (market cap ≥ $10B) with dividend history ≥ 10 years and payout ratio < 80%.',
+      selection: 'Screens for dividend yield ≥ 2%, dividend growth ≥ 5% over 5 years, and payout sustainability. AI evaluates business model durability and cash flow stability.',
+      rebalancing: 'Semi-annual rebalancing. Positions are weighted by dividend sustainability score and yield-adjusted quality metrics.',
+    },
+  };
+
+  return methodologies[fundSlug] || methodologies['ai-growth-fund'];
+}
+
+/**
+ * Generate sector allocation from holdings
+ */
+export function generateSectorAllocation(holdings: any[]) {
+  const sectorCounts: Record<string, number> = {};
+  
+  holdings.forEach(holding => {
+    const sector = holding.sector || 'Other';
+    sectorCounts[sector] = (sectorCounts[sector] || 0) + holding.weightPct;
+  });
+
+  // Round to 1 decimal
+  Object.keys(sectorCounts).forEach(sector => {
+    sectorCounts[sector] = Math.round(sectorCounts[sector] * 10) / 10;
+  });
+
+  return sectorCounts;
+}
+
+/**
+ * Generate geographic allocation (mock data based on fund type)
+ */
+export function generateGeoAllocation(fundSlug: string) {
+  const allocations: Record<string, any> = {
+    'ai-growth-fund': {
+      'United States': 85,
+      'China': 8,
+      'Taiwan': 4,
+      'South Korea': 3,
+    },
+    'ai-value-fund': {
+      'United States': 75,
+      'United Kingdom': 10,
+      'Canada': 8,
+      'Germany': 4,
+      'France': 3,
+    },
+    'ai-dividend-fund': {
+      'United States': 90,
+      'United Kingdom': 5,
+      'Canada': 3,
+      'Switzerland': 2,
+    },
+  };
+
+  return allocations[fundSlug] || allocations['ai-growth-fund'];
+}
+
+/**
+ * Generate market cap allocation (mock data based on fund type)
+ */
+export function generateMarketCapAllocation(fundSlug: string) {
+  const allocations: Record<string, any> = {
+    'ai-growth-fund': {
+      'LargeCap': 70,
+      'MidCap': 25,
+      'SmallCap': 5,
+    },
+    'ai-value-fund': {
+      'LargeCap': 60,
+      'MidCap': 30,
+      'SmallCap': 10,
+    },
+    'ai-dividend-fund': {
+      'LargeCap': 95,
+      'MidCap': 5,
+      'SmallCap': 0,
+    },
+  };
+
+  return allocations[fundSlug] || allocations['ai-growth-fund'];
+}
+

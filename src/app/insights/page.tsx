@@ -32,7 +32,7 @@ export default function InsightsPage() {
   }, [posts]);
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
+    <main className="min-h-screen bg-[#303741] text-white pt-16">
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

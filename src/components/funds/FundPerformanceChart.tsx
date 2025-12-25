@@ -71,7 +71,7 @@ export default function FundPerformanceChart({ slug }: FundPerformanceChartProps
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#232323] border border-[#404040] p-3 rounded-lg shadow-xl">
+        <div className="bg-[#303741] border border-[#404040] p-3 rounded-lg shadow-xl">
           <p className="text-white/60 text-xs mb-1">
             {new Date(label).toLocaleDateString(undefined, { 
               year: 'numeric', 

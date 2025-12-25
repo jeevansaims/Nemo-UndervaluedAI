@@ -4,33 +4,13 @@
  */
 
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import FundPerformanceChart from '@/components/funds/FundPerformanceChart';
-
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-
-// Inline mock fund data for when fetch fails on Vercel
-const MOCK_FUND = {
-  id: 'ai-growth-fund',
-  slug: 'ai-growth-fund',
-  name: 'AI Growth Fund',
-  description: 'AI-powered growth investing focused on high-conviction technology and innovation plays',
-  currentValue: 127680,
-  metrics: {
-    totalReturn: 27.68,
-    sharpeRatio: 1.95,
-    maxDrawdown: -5.37,
-    volatility: 10.37,
-  },
-  holdings: [
-    { id: '1', ticker: 'NVDA', name: 'NVIDIA Corporation', weightPct: 25.5, rationale: 'AI chip leader with dominant market position' },
-    { id: '2', ticker: 'AMD', name: 'Advanced Micro Devices', weightPct: 18.2, rationale: 'Strong momentum in data center GPUs' },
-    { id: '3', ticker: 'META', name: 'Meta Platforms', weightPct: 15.8, rationale: 'AI investments driving revenue growth' },
-    { id: '4', ticker: 'MSFT', name: 'Microsoft Corporation', weightPct: 14.5, rationale: 'Azure + OpenAI partnership momentum' },
-    { id: '5', ticker: 'NFLX', name: 'Netflix Inc', weightPct: 12.0, rationale: 'Strong revenue growth trajectory' },
-  ],
-  lastUpdated: new Date().toISOString(),
-};
+import BrokerConnectionCard from '@/components/broker/BrokerConnectionCard';
+import FundMethodologyPanel from '@/components/funds/FundMethodologyPanel';
+import AllocationCharts from '@/components/funds/AllocationCharts';
+import { prisma } from '@/lib/prisma';
+import { getFundMethodology, generateSectorAllocation, generateGeoAllocation, generateMarketCapAllocation } from '@/lib/funds/generateFundData';
 
 export default async function FundDetailPage({
   params,
@@ -39,62 +19,58 @@ export default async function FundDetailPage({
 }) {
   const { slug } = await params;
   
-  let fund = slug === 'ai-growth-fund' ? MOCK_FUND : null;
+  // Fetch fund details directly from database
+  const fundData = await prisma.fund.findUnique({
+    where: { slug },
+  });
   
-  try {
-    // Try to fetch fund details
-    const res = await fetch(`${BASE_URL}/api/funds/${slug}`, {
-      cache: 'no-store',
-    });
-    
-    if (res.ok) {
-      const data = await res.json();
-      if (data.fund) {
-        fund = data.fund;
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching fund, using mock data:', error);
-    // Use mock data on error
+  if (!fundData) {
+    notFound();
   }
   
-  if (!fund) {
-    return (
-      <main className="min-h-screen bg-[#232323] text-white">
-        <div className="mx-auto max-w-6xl px-6 py-10">
-          <h1 className="text-3xl font-bold">Fund Not Found</h1>
-          <p className="mt-4">The requested fund could not be found.</p>
-          <Link href="/funds" className="mt-4 inline-block text-emerald-400 hover:underline">
-            ← Back to Funds
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  // Get holdings
+  const holdings = await prisma.holding.findMany({
+    where: { fundId: fundData.id },
+    orderBy: { weightPct: 'desc' },
+  });
   
-  const metrics = fund.metrics;
+  // Get latest snapshot for current metrics
+  const latestSnapshot = await prisma.fundSnapshot.findFirst({
+    where: { fundId: fundData.id },
+    orderBy: { date: 'desc' },
+  });
+  
+  const fund = {
+    ...fundData,
+    holdings,
+    currentValue: latestSnapshot?.equity || 100,
+    metrics: latestSnapshot?.metrics || null,
+    lastUpdated: latestSnapshot?.date || fundData.updatedAt,
+  };
+  
+  const metrics = fund.metrics as any;
+  
+  // Get methodology and allocations
+  const methodology = getFundMethodology(slug);
+  const sectorAllocation = latestSnapshot?.sectorAllocation as Record<string, number> | undefined || generateSectorAllocation(holdings);
+  const geoAllocation = latestSnapshot?.geoAllocation as Record<string, number> | undefined || generateGeoAllocation(slug);
+  const marketCapAllocation = latestSnapshot?.marketCapAllocation as Record<string, number> | undefined || generateMarketCapAllocation(slug);
 
   
   return (
-    <main className="min-h-screen bg-[#232323] text-white">
+    <main className="min-h-screen bg-[#303741] text-white pt-16">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        {/* Breadcrumbs */}
-        <div className="mb-6 flex items-center gap-2 text-sm text-white/50">
-          <Link href="/" className="hover:text-white transition">
-            Home
-          </Link>
-          <span>›</span>
-          <Link href="/funds" className="hover:text-white transition">
-            Funds
-          </Link>
-          <span>›</span>
-          <span className="text-white font-medium">{fund.name}</span>
-        </div>
+
 
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold">{fund.name}</h1>
           <p className="mt-2 text-lg text-white/60">{fund.description}</p>
+        </div>
+
+        {/* Fund Methodology */}
+        <div className="mb-8">
+          <FundMethodologyPanel methodology={methodology} />
         </div>
 
         {/* Metrics Grid */}
@@ -254,6 +230,18 @@ export default async function FundDetailPage({
             Total Holdings: {fund.holdings.length} | 
             Last Updated: {new Date(fund.lastUpdated).toLocaleDateString()}
           </div>
+        </div>
+
+        {/* Allocation Charts */}
+        <AllocationCharts 
+          sectorAllocation={sectorAllocation}
+          geoAllocation={geoAllocation}
+          marketCapAllocation={marketCapAllocation}
+        />
+
+        {/* Broker Connection */}
+        <div className="mt-8">
+          <BrokerConnectionCard />
         </div>
 
         {/* Back Link */}

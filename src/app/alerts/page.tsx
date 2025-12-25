@@ -29,14 +29,8 @@ export default function AlertsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#232323] text-white">
+    <main className="min-h-screen bg-[#303741] text-white pt-16">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex items-center gap-2 text-sm text-white/50 mb-6">
-          <Link href="/" className="hover:text-white transition">Home</Link>
-          <span>›</span>
-          <span className="text-white">Alerts</span>
-        </div>
-
         <div className="mb-8">
           <h1 className="text-4xl font-bold">Insider Trading Alerts</h1>
           <p className="mt-2 text-white/60">

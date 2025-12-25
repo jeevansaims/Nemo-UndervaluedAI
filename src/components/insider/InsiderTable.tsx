@@ -12,7 +12,7 @@ export default function InsiderTable({ trades }: { trades: InsiderTrade[] }) {
   });
 
   return (
-    <div className="rounded-xl border border-[#404040] bg-[#232323] overflow-hidden">
+    <div className="rounded-xl border border-[#404040] bg-[#303741] overflow-hidden">
       {/* Table Header / Filters */}
       <div className="flex items-center justify-between p-4 border-b border-[#404040] bg-[#313131]/50">
         <h3 className="font-semibold text-lg">Recent Transactions</h3>

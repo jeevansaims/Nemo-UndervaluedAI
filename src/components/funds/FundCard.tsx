@@ -22,7 +22,7 @@ export default function FundCard({ fund }: FundCardProps) {
   return (
     <Link
       href={`/funds/${fund.slug}`}
-      className="rounded-2xl border border-[#404040] bg-[#232323] p-6 transition hover:bg-[#313131]"
+      className="rounded-2xl border border-[#404040] bg-[#303741] p-6 transition hover:bg-[#313131]"
     >
       <div className="flex justify-between items-start">
         <div>

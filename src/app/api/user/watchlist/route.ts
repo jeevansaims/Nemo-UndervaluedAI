@@ -10,11 +10,10 @@ export async function GET() {
 
   const items = await prisma.watchlistItem.findMany({
     where: { userId: session.user.id },
-    include: { stock: { select: { ticker: true } } },
-    orderBy: { addedAt: "desc" },
+    orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ tickers: items.map((i) => i.stock.ticker) });
+  return NextResponse.json({ tickers: items.map((i) => i.ticker) });
 }
 
 export async function POST(req: Request) {
@@ -31,31 +30,18 @@ export async function POST(req: Request) {
       return new NextResponse("Invalid ticker", { status: 400 });
     }
 
-    // Find or create the stock
-    let stock = await prisma.stock.findUnique({ where: { ticker } });
-    
-    if (!stock) {
-      // Create a placeholder stock - will be enriched later
-      stock = await prisma.stock.create({
-        data: {
-          ticker,
-          companyName: ticker, // Placeholder
-          currentPrice: 0,
-        },
-      });
-    }
-
+    // Upsert the watchlist item - WatchlistItem has ticker directly
     await prisma.watchlistItem.upsert({
       where: {
-        userId_stockId: {
+        userId_ticker: {
           userId: session.user.id,
-          stockId: stock.id,
+          ticker,
         },
       },
       update: {},
       create: {
         userId: session.user.id,
-        stockId: stock.id,
+        ticker,
       },
     });
 
@@ -80,17 +66,12 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    // Find the stock first
-    const stock = await prisma.stock.findUnique({ where: { ticker } });
-    
-    if (stock) {
-      await prisma.watchlistItem.deleteMany({
-        where: {
-          userId: session.user.id,
-          stockId: stock.id,
-        },
-      });
-    }
+    await prisma.watchlistItem.deleteMany({
+      where: {
+        userId: session.user.id,
+        ticker,
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -98,3 +79,4 @@ export async function DELETE(req: Request) {
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
+

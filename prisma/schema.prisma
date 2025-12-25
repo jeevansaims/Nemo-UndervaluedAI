@@ -13,68 +13,16 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-  id            String      @id @default(cuid())
-  name          String?
-  email         String?     @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  watchlist        WatchlistItem[]
-  alertSubscriptions AlertSubscription[]
-  alertPreferences   AlertPreferences?
-  insights           InsightPost[]
-  stockAnalyses      StockAnalysis[]
-  portfolio          Portfolio?
-  preferences        UserPreferences?
-  // Freemium usage tracking
-  analysisCount      Int         @default(0)
-  isPro              Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-// Phase 11B: Persistent User Data (Stub)
-model AlertSubscription {
-  id        String   @id @default(cuid())
-  userId    String
-  ticker    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, ticker])
-  @@index([userId])
 }
 
 model AlertPreferences {
@@ -82,48 +30,61 @@ model AlertPreferences {
   userId    String   @unique
   types     Json?
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum InsightStatus {
-  DRAFT
-  PUBLISHED
-}
+model AlertSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  ticker    String
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model InsightPost {
-  id          String        @id @default(cuid())
-  userId      String
-  title       String
-  slug        String
-  status      InsightStatus @default(DRAFT)
-  contentMd   String
-  tickers     String[]      @default([])
-  fundSlug    String?
-  weekStart   DateTime?
-  weekEnd     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  @@unique([userId, ticker])
   @@index([userId])
-  @@index([userId, status])
-  @@unique([userId, slug])
 }
 
-// Phase 12: Admin Dashboard & Fund Persistence
 model Fund {
-  id                   String                   @id @default(cuid())
-  slug                 String                   @unique
+  id                   String                 @id @default(cuid())
+  slug                 String                 @unique
   name                 String
   description          String?
-  holdings             Holding[]
-  trades               Trade[]
-  snapshots            FundSnapshot[]
-  holdingsSnapshots    FundHoldingsSnapshot[]
-  createdAt            DateTime                 @default(now())
-  updatedAt            DateTime                 @updatedAt
+  methodology          Json?                  // {universe, selection, rebalancing}
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  FundHoldingsSnapshot FundHoldingsSnapshot[]
+  FundSnapshot         FundSnapshot[]
+  Holding              Holding[]
+  Trade                Trade[]
+}
+
+model FundHoldingsSnapshot {
+  id        String   @id @default(cuid())
+  fundId    String
+  date      DateTime
+  holdings  Json
+  createdAt DateTime @default(now())
+  Fund      Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@unique([fundId, date])
+  @@index([fundId, date])
+}
+
+model FundSnapshot {
+  id                  String   @id @default(cuid())
+  fundId              String
+  date                DateTime
+  equity              Float
+  benchmark           Float?
+  metrics             Json?
+  sectorAllocation    Json?    // {sector: percentage}
+  geoAllocation       Json?    // {country: percentage}
+  marketCapAllocation Json?    // {Large: %, Mid: %, Small: %}
+  createdAt           DateTime @default(now())
+  Fund                Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@unique([fundId, date])
+  @@index([fundId, date])
 }
 
 model Holding {
@@ -132,22 +93,72 @@ model Holding {
   ticker    String
   name      String?
   weightPct Float    @default(0)
-  bucket    String?  // Optional override: SMALL, MED, LARGE
+  bucket    String?
   rationale String?
   pnl       Float?
   value     Float?
   updatedAt DateTime @updatedAt
-  
-  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  Fund      Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
 
-  @@index([fundId])
   @@unique([fundId, ticker])
+  @@index([fundId])
 }
 
+model InsightPost {
+  id        String        @id @default(cuid())
+  userId    String
+  title     String
+  slug      String
+  status    InsightStatus @default(DRAFT)
+  contentMd String
+  tickers   String[]      @default([])
+  fundSlug  String?
+  weekStart DateTime?
+  weekEnd   DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime   @updatedAt
+  User      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-enum TradeAction {
-  BUY
-  SELL
+  @@unique([userId, slug])
+  @@index([userId])
+  @@index([userId, status])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StockAnalysis {
+  id                String         @id @default(cuid())
+  userId            String
+  ticker            String
+  status            AnalysisStatus @default(PENDING)
+  currentPrice      Float?
+  marketCap         Float?
+  peRatio           Float?
+  valuationResult   String?
+  sentimentResult   String?
+  fundamentalResult String?
+  riskResult        String?
+  finalReport       String?
+  recommendation    String?
+  confidenceScore   Float?
+  targetPrice       Float?
+  agentResults      Json?
+  processingTime    Int?
+  error             String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  User              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([ticker])
+  @@index([userId])
+  @@index([userId, ticker])
 }
 
 model Trade {
@@ -160,43 +171,84 @@ model Trade {
   price     Float?
   rationale String?
   createdAt DateTime    @default(now())
+  Fund      Fund        @relation(fields: [fundId], references: [id], onDelete: Cascade)
 
-  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
-
+  @@index([fundId, date])
   @@index([fundId])
-  @@index([fundId, date])
 }
 
-// Phase 13B: Time-Series Persistence
-model FundSnapshot {
+model User {
+  id                String              @id @default(cuid())
+  name              String?
+  email             String?             @unique
+  emailVerified     DateTime?
+  image             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime           @updatedAt
+  analysisCount     Int                 @default(0)
+  isPro             Boolean             @default(false)
+  Account           Account[]
+  AlertPreferences  AlertPreferences?
+  AlertSubscription AlertSubscription[]
+  InsightPost       InsightPost[]
+  Session           Session[]
+  StockAnalysis     StockAnalysis[]
+  WatchlistItem     WatchlistItem[]
+  BrokerConnection  BrokerConnection?
+  AutoTrade         AutoTrade[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model WatchlistItem {
   id        String   @id @default(cuid())
-  fundId    String
-  date      DateTime // normalized UTC date (00:00)
-  equity    Float    // index-style equity curve (start=100) OR actual portfolio value
-  benchmark Float?   // optional, if storing benchmark curve
-  metrics   Json?    // precomputed metrics (annReturn, sharpe, maxDD, etc.)
+  userId    String
+  ticker    String
   createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
-
-  @@unique([fundId, date])
-  @@index([fundId, date])
+  @@unique([userId, ticker])
+  @@index([userId])
 }
 
-model FundHoldingsSnapshot {
-  id        String   @id @default(cuid())
-  fundId    String
-  date      DateTime
-  holdings  Json     // array of holdings at that date (ticker, weightPct, rationale hash)
-  createdAt DateTime @default(now())
-
-  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
-
-  @@unique([fundId, date])
-  @@index([fundId, date])
+// Broker Integration Models
+model BrokerConnection {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  broker       String   // "alpaca", "ibkr", etc.
+  apiKey       String   // encrypted
+  apiSecret    String   // encrypted
+  paperTrading Boolean  @default(true)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// AI Stock Analysis Models
+model AutoTrade {
+  id          String      @id @default(cuid())
+  userId      String
+  fundSlug    String
+  ticker      String
+  action      TradeAction
+  shares      Float
+  status      TradeStatus @default(PENDING)
+  orderId     String?     // broker order ID
+  executedAt  DateTime?
+  errorMsg    String?
+  createdAt   DateTime    @default(now())
+  User        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([fundSlug])
+}
+
 enum AnalysisStatus {
   PENDING
   PROCESSING
@@ -204,300 +256,20 @@ enum AnalysisStatus {
   FAILED
 }
 
-model StockAnalysis {
-  id              String          @id @default(cuid())
-  userId          String
-  ticker          String
-  status          AnalysisStatus  @default(PENDING)
-
-  // Market data snapshot at time of analysis
-  currentPrice    Float?
-  marketCap       Float?
-  peRatio         Float?
-
-  // AI-generated analysis sections
-  valuationResult String?         @db.Text // From Valuation Agent
-  sentimentResult String?         @db.Text // From Sentiment Agent
-  fundamentalResult String?       @db.Text // From Fundamental Agent
-  riskResult      String?         @db.Text // From Risk Agent
-  finalReport     String?         @db.Text // From Portfolio Manager Agent
-
-  // Summary and recommendation
-  recommendation  String?         // BUY, HOLD, SELL
-  confidenceScore Float?          // 0-100
-  targetPrice     Float?
-
-  // Metadata
-  agentResults    Json?           // Raw agent outputs for debugging
-  processingTime  Int?            // milliseconds
-  error           String?         @db.Text
-
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([userId, ticker])
-  @@index([ticker])
-  @@index([createdAt])
+enum InsightStatus {
+  DRAFT
+  PUBLISHED
 }
 
-// Phase 14: Undervalued.ai Core Models
-
-// Stock Information
-model Stock {
-  id              String     @id @default(cuid())
-  ticker          String     @unique
-  companyName     String
-  sector          String?
-  industry        String?
-  marketCap       Float?
-  peRatio         Float?
-  pbRatio         Float?
-  psRatio         Float?
-  debtToEquity    Float?
-  currentPrice    Float
-
-  // Relationships
-  insiderAlerts   InsiderAlert[]
-  watchlistItems  WatchlistItem[]
-  portfolioHoldings PortfolioHolding[]
-  historicalData  StockHistoricalData[]
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@index([ticker])
+enum TradeAction {
+  BUY
+  SELL
 }
 
-// Historical stock price data
-model StockHistoricalData {
-  id              String     @id @default(cuid())
-  stockId         String
-  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
-
-  date            DateTime
-  open            Float
-  high            Float
-  low             Float
-  close           Float
-  volume          Float
-
-  createdAt       DateTime   @default(now())
-
-  @@unique([stockId, date])
-  @@index([stockId, date])
-}
-
-// Insider Trading Alerts
-model InsiderAlert {
-  id              String     @id @default(cuid())
-  stockId         String
-  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
-
-  insiderName     String
-  title           String
-  relation        String     // CEO, Director, Officer, etc.
-  transactionType String     // BUY, SELL
-  shares          Int
-  price           Float
-  date            DateTime
-
-  createdAt       DateTime   @default(now())
-
-  @@index([stockId])
-  @@index([date])
-}
-
-// User watchlist
-model WatchlistItem {
-  id              String     @id @default(cuid())
-  userId          String
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  stockId         String
-  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
-
-  addedAt         DateTime   @default(now())
-  notes           String?
-
-  @@unique([userId, stockId])
-  @@index([userId])
-}
-
-// Portfolio management
-model Portfolio {
-  id              String     @id @default(cuid())
-  userId          String     @unique
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name            String     @default("My Portfolio")
-  description     String?
-  isPrivate       Boolean    @default(true)
-
-  holdings        PortfolioHolding[]
-  performance     PortfolioPerformance[]
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@index([userId])
-}
-
-// Individual holdings in portfolio
-model PortfolioHolding {
-  id              String     @id @default(cuid())
-  portfolioId     String
-  portfolio       Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-
-  stockId         String
-  stock           Stock      @relation(fields: [stockId], references: [id], onDelete: Cascade)
-
-  quantity        Float
-  averagePrice    Float
-  purchaseDate    DateTime
-  notes           String?
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@unique([portfolioId, stockId])
-  @@index([portfolioId])
-  @@index([stockId])
-}
-
-// Portfolio performance snapshot
-model PortfolioPerformance {
-  id              String     @id @default(cuid())
-  portfolioId     String
-  portfolio       Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-
-  date            DateTime
-  totalValue      Float
-  totalCost       Float
-  gainLoss        Float
-  percentageGain  Float
-
-  @@unique([portfolioId, date])
-  @@index([portfolioId, date])
-}
-
-// Daily Brief Email Subscription
-model DailyBrief {
-  id              String     @id @default(cuid())
-  email           String     @unique
-
-  isSubscribed    Boolean    @default(true)
-  subscriptionDate DateTime  @default(now())
-  unsubscribeToken String?   @unique
-
-  lastSentDate    DateTime?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@index([isSubscribed])
-}
-
-// AI Fund Performance (Like their actual hedge fund)
-model AIFund {
-  id              String     @id @default(cuid())
-  name            String     @unique // "Original Fund", "SP500 AI Select", etc.
-  slug            String     @unique
-  description     String?
-
-  strategy        String?
-  allocation      Json?      // JSON for sector allocation, etc.
-
-  startingCapital Float      @default(100000)
-  currentValue    Float
-  inceptionDate   DateTime
-
-  performance     AIFundPerformance[]
-  holdings        AIFundHolding[]
-
-  isPublic        Boolean    @default(true)
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@index([slug])
-}
-
-// Daily fund performance data
-model AIFundPerformance {
-  id              String     @id @default(cuid())
-  fundId          String
-  fund            AIFund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
-
-  date            DateTime
-  value           Float
-  return          Float      // percentage
-  benchmarkReturn Float?
-
-  @@unique([fundId, date])
-  @@index([fundId, date])
-}
-
-// Fund holdings
-model AIFundHolding {
-  id              String     @id @default(cuid())
-  fundId          String
-  fund            AIFund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
-
-  ticker          String
-  companyName     String?
-  weight          Float      // percentage of portfolio
-  shares          Float
-  entryPrice      Float
-  currentPrice    Float
-
-  rationale       String?    // Why fund holds this stock
-
-  addedDate       DateTime   @default(now())
-  removedDate     DateTime?
-
-  @@unique([fundId, ticker, addedDate])
-  @@index([fundId])
-}
-
-// Market insights & analysis
-model MarketInsight {
-  id              String     @id @default(cuid())
-
-  title           String
-  content         String     @db.Text
-  category        String     // "Market", "Sector", "Macro", etc.
-
-  relatedStocks   String[]   // Array of ticker symbols
-  sentiment       String?    // BULLISH, NEUTRAL, BEARISH
-
-  source          String?    // Where the insight came from
-
-  isPublished     Boolean    @default(false)
-  publishedDate   DateTime?
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@index([category])
-  @@index([publishedDate])
-}
-
-// User preferences and settings
-model UserPreferences {
-  id              String     @id @default(cuid())
-  userId          String     @unique
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  theme           String     @default("dark")
-  emailNotifications Boolean  @default(true)
-  dailyBrief      Boolean    @default(false)
-  insiderAlerts   Boolean    @default(true)
-
-  preferredCurrencies String[]
-  preferredSectors    String[]
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+enum TradeStatus {
+  PENDING
+  EXECUTING
+  EXECUTED
+  FAILED
+  CANCELLED
 }

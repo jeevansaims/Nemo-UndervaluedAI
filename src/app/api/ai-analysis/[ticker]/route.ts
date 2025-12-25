@@ -33,11 +33,18 @@ async function fetchMarketData(ticker: string): Promise<MarketData> {
     );
     const profile = await profileRes.json();
 
-    // Fetch basic financials
+    // Fetch basic financials (current metrics)
     const financialsRes = await fetch(
       `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${apiKey}`
     );
     const financials = await financialsRes.json();
+
+    // Fetch HISTORICAL financial statements (for Warren Buffett analysis)
+    // This endpoint provides multi-year income statement/balance sheet data
+    const statementsRes = await fetch(
+      `https://finnhub.io/api/v1/stock/financials-reported?symbol=${ticker}&token=${apiKey}`
+    );
+    const statementsData = await statementsRes.json();
 
     // Fetch recent news
     const newsRes = await fetch(
@@ -50,6 +57,81 @@ async function fetchMarketData(ticker: string): Promise<MarketData> {
       `https://finnhub.io/api/v1/stock/insider-transactions?symbol=${ticker}&token=${apiKey}`
     );
     const insiderData = await insiderRes.json();
+
+    // Parse FINANCIAL STATEMENTS data (from financials-reported endpoint)
+    // This gives us multi-year historical data for moat/intrinsic value calculations
+    const financialHistory: any[] = [];
+    
+    if (statementsData.data && Array.isArray(statementsData.data)) {
+      // Group reports by fiscal year
+      const annualReports = statementsData.data.filter((r: any) => r.form === '10-K');
+      
+      for (const report of annualReports.slice(0, 5)) { // Last 5 years
+        const filingDate = report.filedDate || report.acceptedDate;
+        const fiscalYear = report.year;
+        
+        // Extract key metrics from the report
+        const ic = report.report?.ic || []; // Income statement items
+        const bs = report.report?.bs || []; // Balance sheet items
+        const cf = report.report?.cf || []; // Cash flow items
+        
+        // Helper to find concept value
+        const findValue = (items: any[], concepts: string[]) => {
+          for (const concept of concepts) {
+            const item = items.find((i: any) => 
+              i.concept?.toLowerCase().includes(concept.toLowerCase())
+            );
+            if (item?.value) return item.value;
+          }
+          return undefined;
+        };
+        
+        const revenue = findValue(ic, ['revenue', 'salesrevenuenet', 'revenues']);
+        const netIncome = findValue(ic, ['netincome', 'profitloss', 'netincomeloss']);
+        const eps = findValue(ic, ['earningspersharebasic', 'epsdiluted']);
+        const fcf = findValue(cf, ['netcashprovidedbyoperatingactivities', 'freecashflow']);
+        const grossProfit = findValue(ic, ['grossprofit']);
+        const operatingIncome = findValue(ic, ['operatingincome', 'operatingincomeloss']);
+        const totalAssets = findValue(bs, ['assets', 'totalassets']);
+        const totalEquity = findValue(bs, ['stockholdersequity', 'totalequity']);
+        const totalDebt = findValue(bs, ['longtermdebt', 'totaldebt']);
+        
+        // Calculate derived metrics
+        const grossMargin = revenue && grossProfit ? grossProfit / revenue : undefined;
+        const operatingMargin = revenue && operatingIncome ? operatingIncome / revenue : undefined;
+        const roe = totalEquity && netIncome ? netIncome / totalEquity : undefined;
+        const debtToEquity = totalEquity && totalDebt ? totalDebt / totalEquity : undefined;
+        
+        if (revenue || netIncome) {
+          financialHistory.push({
+            date: filingDate || `${fiscalYear}-12-31`,
+            revenue,
+            netIncome,
+            eps,
+            freeCashFlow: fcf,
+            grossMargin,
+            operatingMargin,
+            roe,
+            debtToEquity,
+          });
+        }
+      }
+    }
+    
+    // Fallback: If no statements data, try to create basic history from current metrics
+    if (financialHistory.length === 0 && financials.metric) {
+      // Create a single period from current metrics
+      const currentMetrics = {
+        date: new Date().toISOString().split('T')[0],
+        roe: financials.metric.roeRfy,
+        grossMargin: financials.metric.grossMarginTTM / 100,
+        operatingMargin: financials.metric.operatingMarginTTM / 100,
+        debtToEquity: financials.metric.totalDebt2TotalEquityAnnual,
+      };
+      if (currentMetrics.roe || currentMetrics.grossMargin) {
+        financialHistory.push(currentMetrics);
+      }
+    }
 
     const marketData: MarketData = {
       ticker: ticker.toUpperCase(),
@@ -64,6 +146,7 @@ async function fetchMarketData(ticker: string): Promise<MarketData> {
       freeCashFlow: financials.metric?.freeCashFlowTTM,
       dividendYield: financials.metric?.dividendYieldIndicatedAnnual,
       beta: financials.metric?.beta,
+      financialHistory, // Add the historical data
       recentNews: news.slice(0, 5).map((item: any) => ({
         headline: item.headline,
         summary: item.summary,
@@ -119,8 +202,8 @@ export async function POST(
       );
     }
 
-    const { ticker } = await params;
-    const upperTicker = ticker.toUpperCase();
+    const { ticker: tickerParam } = await params;
+    const upperTicker = tickerParam.toUpperCase();
 
     // 3. Get user
     const user = await prisma.user.findUnique({
@@ -135,8 +218,27 @@ export async function POST(
     // 4. Fetch market data
     const marketData = await fetchMarketData(upperTicker);
 
-    // 5. Run AI analysis
-    const result = await runStockAnalysis(marketData);
+    // 5. Get last analysis for consistency (within last 24 hours)
+    const lastAnalysis = await prisma.stockAnalysis.findFirst({
+      where: {
+        userId: user.id,
+        ticker: upperTicker,
+        createdAt: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        targetPrice: true,
+        createdAt: true,
+      },
+    });
+
+    // 6. Run AI analysis with last target price for consistency
+    const result = await runStockAnalysis(
+      marketData,
+      lastAnalysis?.targetPrice ?? undefined
+    );
 
     // 6. Store analysis record with results
     const analysis = await prisma.stockAnalysis.create({

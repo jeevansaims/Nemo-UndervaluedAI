@@ -14,6 +14,13 @@ interface AnalysisData {
   sentimentResult?: string;
   fundamentalResult?: string;
   riskResult?: string;
+  warrenBuffett?: {
+    analysis: string;
+    signal: string;
+    moatScore: number;
+    intrinsicValue: number;
+    marginOfSafety: number;
+  };
 }
 
 export const generateAnalysisPDF = (data: AnalysisData) => {
@@ -116,6 +123,18 @@ export const generateAnalysisPDF = (data: AnalysisData) => {
     { title: 'Fundamental Analysis', content: data.fundamentalResult },
     { title: 'Risk Assessment', content: data.riskResult },
   ];
+
+  if (data.warrenBuffett) {
+    const buffettContent = `
+Signal: ${data.warrenBuffett.signal}
+Moat Score: ${data.warrenBuffett.moatScore}/5
+Intrinsic Value: $${(data.warrenBuffett.intrinsicValue / 1e9).toFixed(2)}B
+Margin of Safety: ${(data.warrenBuffett.marginOfSafety * 100).toFixed(1)}%
+
+Analysis:
+${data.warrenBuffett.analysis}`;
+    sections.splice(1, 0, { title: 'Warren Buffett Analysis', content: buffettContent });
+  }
 
   sections.forEach(section => {
     if (!section.content) return;

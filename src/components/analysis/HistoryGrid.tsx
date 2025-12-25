@@ -21,10 +21,50 @@ export default function HistoryGrid({ history }: HistoryGridProps) {
       marketCap: analysis.marketCap || undefined,
       createdAt: analysis.createdAt,
       finalReport: analysis.finalReport || undefined,
-      valuationResult: undefined,
-      sentimentResult: undefined,
-      fundamentalResult: undefined,
       riskResult: undefined,
+      warrenBuffett: undefined,
+    });
+
+    if (analysis.agentResults) {
+      try {
+        const agentResults = analysis.agentResults as any;
+        if (agentResults.warrenBuffett) {
+          generateAnalysisPDF({
+            ticker: analysis.ticker,
+            recommendation: analysis.recommendation || undefined,
+            confidenceScore: analysis.confidenceScore || undefined,
+            targetPrice: analysis.targetPrice || undefined,
+            currentPrice: analysis.currentPrice || undefined,
+            marketCap: analysis.marketCap || undefined,
+            createdAt: analysis.createdAt,
+            finalReport: analysis.finalReport || undefined,
+            valuationResult: agentResults.valuation?.analysis || analysis.valuationResult,
+            sentimentResult: agentResults.sentiment?.analysis || analysis.sentimentResult,
+            fundamentalResult: agentResults.fundamental?.analysis || analysis.fundamentalResult,
+            riskResult: agentResults.risk?.analysis || analysis.riskResult,
+            warrenBuffett: agentResults.warrenBuffett,
+          });
+          return;
+        }
+      } catch (e) {
+        console.error('Error parsing agent results:', e);
+      }
+    }
+
+    // Fallback if no agentResults or parse error
+     generateAnalysisPDF({
+      ticker: analysis.ticker,
+      recommendation: analysis.recommendation || undefined,
+      confidenceScore: analysis.confidenceScore || undefined,
+      targetPrice: analysis.targetPrice || undefined,
+      currentPrice: analysis.currentPrice || undefined,
+      marketCap: analysis.marketCap || undefined,
+      createdAt: analysis.createdAt,
+      finalReport: analysis.finalReport || undefined,
+      valuationResult: analysis.valuationResult || undefined,
+      sentimentResult: analysis.sentimentResult || undefined,
+      fundamentalResult: analysis.fundamentalResult || undefined,
+      riskResult: analysis.riskResult || undefined,
     });
   };
 

@@ -31,7 +31,8 @@ Provide a comprehensive valuation analysis including:
 Be analytical, precise, and provide specific numbers with clear reasoning.`;
 
 export async function runValuationAgent(
-  marketData: MarketData
+  marketData: MarketData,
+  lastTargetPrice?: number
 ): Promise<ValuationResult> {
   const startTime = Date.now();
 
@@ -48,12 +49,13 @@ Revenue Growth: ${marketData.revenueGrowth ? (marketData.revenueGrowth * 100).to
 Earnings Growth: ${marketData.earningsGrowth ? (marketData.earningsGrowth * 100).toFixed(2) + '%' : 'N/A'}
 Free Cash Flow: $${marketData.freeCashFlow ? (marketData.freeCashFlow / 1e6).toFixed(2) + 'M' : 'N/A'}
 Dividend Yield: ${marketData.dividendYield ? (marketData.dividendYield * 100).toFixed(2) + '%' : 'N/A'}
+${lastTargetPrice ? `\nIMPORTANT - Last Target Price (within 24h): $${lastTargetPrice}\nFor consistency, your new target should be within ±10% of this unless significant new information emerged.\nAcceptable range: $${(lastTargetPrice * 0.9).toFixed(2)} - $${(lastTargetPrice * 1.1).toFixed(2)}` : ''}
 `;
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 2000,
-      temperature: 0.3,
+      temperature: 0.1,
       messages: [
         {
           role: 'user',

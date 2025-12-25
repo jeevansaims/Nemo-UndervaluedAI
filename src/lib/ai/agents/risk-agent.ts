@@ -52,7 +52,7 @@ ${marketData.insiderTransactions?.length ? `${marketData.insiderTransactions.len
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 1500,
-      temperature: 0.4,
+      temperature: 0.1,
       messages: [
         {
           role: 'user',
@@ -80,6 +80,29 @@ ${marketData.insiderTransactions?.length ? `${marketData.insiderTransactions.len
     // Calculate score (inverse of risk - lower risk = higher score)
     const score = riskLevel === 'Low' ? 80 : riskLevel === 'Medium' ? 50 : 20;
 
+    // POSITION SIZING CALCULATION
+    // Based on Kelly Criterion / Fixed Fractional approach
+    // Portfolio Size: $100,000 (configurable)
+    // Risk per Trade: 2% of portfolio = $2,000
+    // Position Size = Risk Amount / (Current Price * Volatility Factor)
+    const portfolioSize = 100000; // $100k default portfolio
+    const riskPerTrade = 0.02; // 2% risk per trade
+    const riskAmount = portfolioSize * riskPerTrade; // $2,000
+    
+    // Volatility factor based on beta (higher beta = smaller position)
+    const beta = marketData.beta || 1;
+    const volatilityFactor = Math.max(0.5, Math.min(2, beta)); // Clamp between 0.5 and 2
+    
+    // Risk-adjusted position sizing
+    // Lower risk level = larger position, higher risk = smaller position
+    const riskMultiplier = riskLevel === 'Low' ? 1.5 : riskLevel === 'Medium' ? 1.0 : 0.5;
+    
+    // Calculate max position value and shares
+    const maxPositionValue = (riskAmount / volatilityFactor) * riskMultiplier * 10; // Scale up for reasonable position
+    const positionSize = Math.floor(maxPositionValue / marketData.currentPrice);
+    const positionValue = positionSize * marketData.currentPrice;
+    const portfolioWeight = (positionValue / portfolioSize) * 100;
+
     return {
       agentName: 'Risk',
       analysis,
@@ -88,6 +111,10 @@ ${marketData.insiderTransactions?.length ? `${marketData.insiderTransactions.len
       riskFactors,
       score,
       timestamp: new Date(),
+      // New position sizing fields
+      positionSize,
+      positionValue,
+      portfolioWeight,
     };
   } catch (error) {
     console.error('Risk agent error:', error);

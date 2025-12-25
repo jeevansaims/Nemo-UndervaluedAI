@@ -6,28 +6,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Mock data for demo when database is unavailable
-const MOCK_FUNDS = [
-  {
-    id: 'ai-growth-fund',
-    slug: 'ai-growth-fund',
-    name: 'AI Growth Fund',
-    description: 'AI-powered growth investing focused on high-conviction technology and innovation plays',
-    currentValue: 127680,
-    metrics: {
-      totalReturn: 27.68,
-      sharpeRatio: 1.95,
-      maxDrawdown: -5.37,
-      volatility: 10.37,
-    },
-    holdingsCount: 5,
-    lastUpdated: new Date().toISOString(),
-  },
-];
-
 export async function GET() {
   try {
-    // Try to fetch from database
+    // Fetch all funds from database
     const funds = await prisma.fund.findMany({
       select: {
         id: true,
@@ -65,10 +46,16 @@ export async function GET() {
       })
     );
     
-    return NextResponse.json({ funds: fundsWithMetrics.length > 0 ? fundsWithMetrics : MOCK_FUNDS });
+    // Filter to only show funds with snapshots (active funds)
+    const activeFunds = fundsWithMetrics.filter(f => f.metrics !== null);
+    
+    return NextResponse.json({ funds: activeFunds });
   } catch (error) {
-    console.error('Error fetching funds, using mock data:', error);
-    // Return mock data when database is unavailable
-    return NextResponse.json({ funds: MOCK_FUNDS });
+    console.error('Error fetching funds:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch funds' },
+      { status: 500 }
+    );
   }
 }
+

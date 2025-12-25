@@ -16,6 +16,7 @@ import {
   MacroResult,
   EarningsCallResult,
   PortfolioManagerResult,
+  WarrenBuffettResult, // [NEW]
 } from '../types';
 
 const anthropic = new Anthropic({
@@ -24,7 +25,9 @@ const anthropic = new Anthropic({
 
 const PORTFOLIO_MANAGER_PROMPT = `You are an experienced portfolio manager synthesizing multiple expert analyses to make final investment decisions.
 
-You are reviewing analyses from 8 specialist agents:
+You are reviewing analyses from 20 specialist agents:
+
+FUNCTIONAL AGENTS:
 1. Valuation Agent - Intrinsic value and price targets
 2. Sentiment Agent - News and market sentiment
 3. Fundamental Agent - Financial health and growth
@@ -34,8 +37,22 @@ You are reviewing analyses from 8 specialist agents:
 7. Macro Agent - Economic and sector context
 8. Earnings Call Agent - Management tone and guidance
 
+PERSONA AGENTS (Famous Investors):
+9. Warren Buffett - Seeks wonderful companies at fair prices
+10. Ben Graham - Deep value with margin of safety
+11. Charlie Munger - Quality businesses at fair prices
+12. Peter Lynch - Ten-baggers in everyday businesses
+13. Michael Burry - Contrarian deep value
+14. Cathie Wood - Disruptive innovation
+15. Bill Ackman - Activist investing
+16. Phil Fisher - Scuttlebutt research
+17. Stanley Druckenmiller - Macro asymmetric bets
+18. Aswath Damodaran - DCF valuation expert
+19. Mohnish Pabrai - Dhandho low-risk high-reward
+20. Rakesh Jhunjhunwala - Growth at reasonable price
+
 Your role is to:
-1. Review and weigh all 8 specialist analyses
+1. Review and weigh all 9 specialist analyses
 2. Identify agreement and disagreement patterns
 3. Make a clear investment recommendation (BUY, HOLD, or SELL)
 4. Provide a confidence score (0-100) for your recommendation
@@ -69,7 +86,8 @@ export async function runPortfolioManager(
   technicalResult?: TechnicalResult,
   peerComparisonResult?: PeerComparisonResult,
   macroResult?: MacroResult,
-  earningsCallResult?: EarningsCallResult
+  earningsCallResult?: EarningsCallResult,
+  personaResults?: Record<string, any>
 ): Promise<PortfolioManagerResult> {
   try {
     let agentSummaries = `
@@ -152,14 +170,30 @@ Key Themes: ${earningsCallResult.keyThemes.join(', ')}
 `;
     }
 
+    // Add ALL persona agent summaries
+    if (personaResults) {
+      for (const [agentName, result] of Object.entries(personaResults)) {
+        if (result && result.analysis) {
+          agentSummaries += `
+---
+
+${agentName.toUpperCase()} ANALYSIS:
+${result.analysis}
+Signal: ${result.signal || 'N/A'}
+Confidence: ${result.confidence || 'N/A'}%
+`;
+        }
+      }
+    }
+
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 3000,
-      temperature: 0.4,
+      temperature: 0.1,
       messages: [
         {
           role: 'user',
-          content: `${PORTFOLIO_MANAGER_PROMPT}\n\nStock: ${marketData.ticker}\nCurrent Price: $${marketData.currentPrice}\n\nReview the following 8 analyst reports and provide your final investment recommendation:\n\n${agentSummaries}`,
+          content: `${PORTFOLIO_MANAGER_PROMPT}\n\nStock: ${marketData.ticker}\nCurrent Price: $${marketData.currentPrice}\n\nReview the following 9 analyst reports and provide your final investment recommendation:\n\n${agentSummaries}`,
         },
       ],
     });

@@ -1,6 +1,6 @@
 /**
  * AI Orchestrator - Coordinates all agents and manages the analysis workflow
- * Updated to support 8-dimensional analysis matching undervalued.ai methodology
+ * Updated to support 20 agents (9 functional + 11 persona)
  */
 
 import { runValuationAgent } from './agents/valuation-agent';
@@ -11,21 +11,41 @@ import { runTechnicalAgent } from './agents/technical-agent';
 import { runPeerComparisonAgent } from './agents/peer-comparison-agent';
 import { runMacroAgent } from './agents/macro-agent';
 import { runEarningsCallAgent } from './agents/earnings-call-agent';
+import { runWarrenBuffettAgent } from './agents/warren-buffett-agent';
+// Persona Agents
+import { runBenGrahamAgent } from './agents/ben-graham-agent';
+import { runCharlieMungerAgent } from './agents/charlie-munger-agent';
+import { runPeterLynchAgent } from './agents/peter-lynch-agent';
+import { runMichaelBurryAgent } from './agents/michael-burry-agent';
+import { runCathieWoodAgent } from './agents/cathie-wood-agent';
+import { runBillAckmanAgent } from './agents/bill-ackman-agent';
+import { runPhilFisherAgent } from './agents/phil-fisher-agent';
+import { runStanleyDruckenmillerAgent } from './agents/stanley-druckenmiller-agent';
+import { runAswathDamodaranAgent } from './agents/aswath-damodaran-agent';
+import { runMohnishPabraiAgent } from './agents/mohnish-pabrai-agent';
+import { runRakeshJhunjhunwalaAgent } from './agents/rakesh-jhunjhunwala-agent';
 import { runPortfolioManager } from './agents/portfolio-manager';
 import { MarketData, AnalysisResult } from './types';
 
 /**
  * Run comprehensive multi-agent stock analysis
- * Executes all 8 specialist agents in parallel, then synthesizes with portfolio manager
+ * Executes all 20 agents in parallel, then synthesizes with portfolio manager
  */
-export async function runStockAnalysis(marketData: MarketData): Promise<AnalysisResult> {
+export async function runStockAnalysis(
+  marketData: MarketData,
+  lastTargetPrice?: number
+): Promise<AnalysisResult> {
   const startTime = Date.now();
 
   try {
-    console.log(`Starting 8-dimensional analysis for ${marketData.ticker}...`);
+    console.log(`Starting 20-agent analysis for ${marketData.ticker}...`);
+    if (lastTargetPrice) {
+      console.log(`Last target price for ${marketData.ticker}: $${lastTargetPrice} (for consistency)`);
+    }
 
-    // Run all specialist agents in parallel for speed (8 agents now)
+    // Run ALL agents in parallel (9 functional + 11 persona = 20 total)
     const [
+      // Functional Agents
       valuationResult,
       sentimentResult,
       fundamentalResult,
@@ -34,8 +54,22 @@ export async function runStockAnalysis(marketData: MarketData): Promise<Analysis
       peerComparisonResult,
       macroResult,
       earningsCallResult,
+      // Persona Agents
+      warrenBuffettResult,
+      benGrahamResult,
+      charlieMungerResult,
+      peterLynchResult,
+      michaelBurryResult,
+      cathieWoodResult,
+      billAckmanResult,
+      philFisherResult,
+      stanleyDruckenmillerResult,
+      aswathDamodaranResult,
+      mohnishPabraiResult,
+      rakeshJhunjhunwalaResult,
     ] = await Promise.all([
-      runValuationAgent(marketData),
+      // Functional
+      runValuationAgent(marketData, lastTargetPrice),
       runSentimentAgent(marketData),
       runFundamentalAgent(marketData),
       runRiskAgent(marketData),
@@ -43,9 +77,38 @@ export async function runStockAnalysis(marketData: MarketData): Promise<Analysis
       runPeerComparisonAgent(marketData),
       runMacroAgent(marketData),
       runEarningsCallAgent(marketData),
+      // Persona
+      runWarrenBuffettAgent(marketData),
+      runBenGrahamAgent(marketData),
+      runCharlieMungerAgent(marketData),
+      runPeterLynchAgent(marketData),
+      runMichaelBurryAgent(marketData),
+      runCathieWoodAgent(marketData),
+      runBillAckmanAgent(marketData),
+      runPhilFisherAgent(marketData),
+      runStanleyDruckenmillerAgent(marketData),
+      runAswathDamodaranAgent(marketData),
+      runMohnishPabraiAgent(marketData),
+      runRakeshJhunjhunwalaAgent(marketData),
     ]);
 
-    console.log(`All 8 specialist agents completed for ${marketData.ticker}`);
+    console.log(`All 20 agents completed for ${marketData.ticker}`);
+
+    // Collect all persona results for portfolio manager
+    const personaResults = {
+      warrenBuffett: warrenBuffettResult,
+      benGraham: benGrahamResult,
+      charlieMunger: charlieMungerResult,
+      peterLynch: peterLynchResult,
+      michaelBurry: michaelBurryResult,
+      cathieWood: cathieWoodResult,
+      billAckman: billAckmanResult,
+      philFisher: philFisherResult,
+      stanleyDruckenmiller: stanleyDruckenmillerResult,
+      aswathDamodaran: aswathDamodaranResult,
+      mohnishPabrai: mohnishPabraiResult,
+      rakeshJhunjhunwala: rakeshJhunjhunwalaResult,
+    };
 
     // Run portfolio manager to synthesize all analyses
     const portfolioManagerResult = await runPortfolioManager(
@@ -57,7 +120,8 @@ export async function runStockAnalysis(marketData: MarketData): Promise<Analysis
       technicalResult,
       peerComparisonResult,
       macroResult,
-      earningsCallResult
+      earningsCallResult,
+      personaResults
     );
 
     console.log(`Portfolio manager synthesis completed for ${marketData.ticker}`);
@@ -75,6 +139,8 @@ export async function runStockAnalysis(marketData: MarketData): Promise<Analysis
       peerComparison: peerComparisonResult,
       macro: macroResult,
       earningsCall: earningsCallResult,
+      warrenBuffett: warrenBuffettResult,
+      personaAgents: personaResults,
       portfolioManager: portfolioManagerResult,
       processingTime,
     };
