@@ -62,11 +62,13 @@ ${quantSummary}
 - BEARISH: Overvalued, crowded trade, structural decline = Short candidate
 - NEUTRAL: Fair value, no clear catalyst, mainstream stock
 
+CRITICAL: Your response MUST be thorough (minimum 300 words). Institutional investors need comprehensive deep-value analysis.
+
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
-  "reasoning": "Provide 2-4 paragraphs in Michael Burry's intense, data-driven contrarian style. Discuss asset values, potential catalysts, and why you're willing to bet against the crowd (or not)."
+  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) Asset Value Analysis - P/B ${pbRatio.toFixed(2)}, FCF ${(fcfYield*100).toFixed(2)}%, liquidation value vs market price; (2) Catalyst Identification - What event unlocks value? Turnaround, buyout, breakup?; (3) Contrarian Thesis - What's the market missing? Why are you comfortable being early and wrong?; (4) Risk/Position Sizing - Downside protection, position size for concentrated contrarian bet. Use Burry's intense, data-driven style with specific numbers."
 }`;
 
   const message = await anthropic.messages.create({

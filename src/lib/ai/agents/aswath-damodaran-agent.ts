@@ -62,11 +62,13 @@ ${quantSummary}
 - BEARISH: Market cap exceeds intrinsic value, story is overhyped or deteriorating
 - NEUTRAL: Fair value, or too much uncertainty in assumptions
 
+CRITICAL: Write a minimum of 300 words. This is for institutional investors who need rigorous valuation analysis.
+
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
-  "reasoning": "Provide 2-4 paragraphs in Aswath Damodaran's professorial, data-driven style. Discuss the valuation story, your key assumptions, and whether the stock offers adequate margin of safety."
+  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) The Valuation Story - What narrative is the market pricing? IV of $${(ivAnalysis.intrinsicValue/1e9).toFixed(2)}B vs market cap - what assumptions drive this gap?; (2) Key DCF Assumptions - Break down growth rates, margins, WACC, terminal value. Are these realistic given the business?; (3) Margin of Safety Analysis - At ${(marginOfSafety*100).toFixed(1)}% margin, is there adequate cushion for error? Sensitivity to assumptions?; (4) Investment Verdict - Does the risk/reward justify a position? What price would make this compelling? Use Damodaran's professorial, numbers-driven style with explicit assumptions."
 }`;
 
   const message = await anthropic.messages.create({

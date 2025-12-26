@@ -61,11 +61,23 @@ ${quantSummary}
 - BEARISH: Poor capital allocation, commodity business, or grossly overvalued
 - NEUTRAL: Good business but price too high, or average business at fair price
 
-Return JSON:
+CRITICAL: Your response MUST be thorough and detailed. This is for institutional investors who need comprehensive analysis.
+
+Return JSON with this EXACT structure:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
-  "reasoning": "Provide 2-4 paragraphs in Charlie Munger's direct, pithy style. Apply relevant mental models, discuss what could go wrong (inversion), and give your candid assessment of business quality vs. price."
+  "reasoning": "WRITE A MINIMUM OF 300 WORDS in 3-4 detailed paragraphs:
+
+Paragraph 1: Business Quality - Analyze whether this is a 'wonderful business'. Look at ROE (${(roe*100).toFixed(1)}%), revenue growth, pricing power, and competitive moat. Does this business have durable competitive advantages?
+
+Paragraph 2: Mental Models - Apply your key mental models (inversion, lollapalooza effects, incentives, etc.). What could go catastrophically wrong? What are the biggest risks? Use specific examples.
+
+Paragraph 3: Valuation vs Quality - At P/E of ${peRatio.toFixed(2)}, are we paying a fair price for quality? Compare to your 'wonderful business at fair price' philosophy.
+
+Paragraph 4: Final Assessment - Would you recommend this for a concentrated portfolio of great businesses? Why or why not? Be direct and candid in Charlie's no-nonsense style.
+
+Be specific, quote concrete numbers, and use your characteristic wit and directness. NO vague platitudes."
 }`;
 
   const message = await anthropic.messages.create({

@@ -60,11 +60,13 @@ ${quantSummary}
 - BEARISH: Legacy business model, disruption victim, no innovation pipeline
 - NEUTRAL: Moderate innovation but not at the frontier, or already priced for perfection
 
+CRITICAL: Write a minimum of 300 words for institutional investors.
+
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
-  "reasoning": "Provide 2-4 paragraphs in Cathie Wood's optimistic, forward-looking style. Discuss the innovation thesis, TAM opportunity, and why you'd include or exclude this from your flagship fund."
+  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) Innovation Assessment - Is this riding major tech waves (AI, genomics, blockchain, EVs, robotics)? What's the TAM expansion story?; (2) Disruptive Potential - Will this 10x in 5 years? Explain the exponential growth thesis and technological moat; (3) Valuation for Growth - Growth rate (${growthScore.toFixed(1)}%) justifies premium valuation? Compare to innovation peers; (4) Conviction Level - Would you put this in ARK funds? 5-year price target and catalysts. Use Cathie's optimistic, future-focused style with specific growth metrics."
 }`;
 
   const message = await anthropic.messages.create({
