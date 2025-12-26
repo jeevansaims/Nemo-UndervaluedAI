@@ -64,11 +64,15 @@ ${quantSummary}
 
 CRITICAL: Write a minimum of 300 words. This is for institutional investors who need rigorous valuation analysis.
 
+Valuation Metrics:
+- Intrinsic Value: $${(ivAnalysis.intrinsicValue/1e9).toFixed(2)}B
+- Margin of Safety: ${(marginOfSafety*100).toFixed(1)}%
+
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
-  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) The Valuation Story - What narrative is the market pricing? IV of $${(ivAnalysis.intrinsicValue/1e9).toFixed(2)}B vs market cap - what assumptions drive this gap?; (2) Key DCF Assumptions - Break down growth rates, margins, WACC, terminal value. Are these realistic given the business?; (3) Margin of Safety Analysis - At ${(marginOfSafety*100).toFixed(1)}% margin, is there adequate cushion for error? Sensitivity to assumptions?; (4) Investment Verdict - Does the risk/reward justify a position? What price would make this compelling? Use Damodaran's professorial, numbers-driven style with explicit assumptions."
+  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) The Valuation Story - What narrative is the market pricing? Using the intrinsic value provided vs market cap - what assumptions drive this gap?; (2) Key DCF Assumptions - Break down growth rates, margins, WACC, terminal value. Are these realistic given the business?; (3) Margin of Safety Analysis - Using the margin of safety I calculated, is there adequate cushion for error? Sensitivity to assumptions?; (4) Investment Verdict - Does the risk/reward justify a position? What price would make this compelling? Use Damodaran's professorial, numbers-driven style with the explicit assumptions I provided."
 }`;
 
   const message = await anthropic.messages.create({

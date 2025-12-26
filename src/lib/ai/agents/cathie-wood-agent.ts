@@ -62,11 +62,14 @@ ${quantSummary}
 
 CRITICAL: Write a minimum of 300 words for institutional investors.
 
+Growth Metrics:
+- Growth Score: ${growthScore.toFixed(1)}%
+
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
-  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) Innovation Assessment - Is this riding major tech waves (AI, genomics, blockchain, EVs, robotics)? What's the TAM expansion story?; (2) Disruptive Potential - Will this 10x in 5 years? Explain the exponential growth thesis and technological moat; (3) Valuation for Growth - Growth rate (${growthScore.toFixed(1)}%) justifies premium valuation? Compare to innovation peers; (4) Conviction Level - Would you put this in ARK funds? 5-year price target and catalysts. Use Cathie's optimistic, future-focused style with specific growth metrics."
+  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) Innovation Assessment - Is this riding major tech waves (AI, genomics, blockchain, EVs, robotics)? What's the TAM expansion story?; (2) Disruptive Potential - Will this 10x in 5 years? Explain the exponential growth thesis and technological moat; (3) Valuation for Growth - Does the growth rate I provided justify premium valuation? Compare to innovation peers; (4) Conviction Level - Would you put this in ARK funds? 5-year price target and catalysts. Use Cathie's optimistic, future-focused style with the specific growth metrics I provided."
 }`;
 
   const message = await anthropic.messages.create({

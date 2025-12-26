@@ -75,21 +75,26 @@ ${quantSummary}
 
 CRITICAL: Your response MUST be thorough and detailed. This is for institutional investors who need comprehensive analysis.
 
+You have these metrics to analyze:
+- P/E Ratio: ${peRatio.toFixed(2)}
+- P/B Ratio: ${pbRatio.toFixed(2)}
+- D/E Ratio: ${debtToEquity.toFixed(2)}
+
 Return JSON with this EXACT structure:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
   "reasoning": "WRITE A MINIMUM OF 300 WORDS in 3-4 detailed paragraphs analyzing:
 
-Paragraph 1: Valuation - Deep dive into P/E (${peRatio.toFixed(2)}), P/B (${pbRatio.toFixed(2)}), and the margin of safety. Calculate and explain the intrinsic value vs current price. Is this trading at a significant discount?
+Paragraph 1: Valuation - Deep dive into the P/E and P/B ratios provided above, and calculate the margin of safety. Explain the intrinsic value vs current price. Is this trading at a significant discount?
 
-Paragraph 2: Balance Sheet Strength - Thoroughly analyze the D/E ratio (${debtToEquity.toFixed(2)}), current ratio expectations, and overall financial stability. How conservative is this company's capital structure?
+Paragraph 2: Balance Sheet Strength - Thoroughly analyze the D/E ratio, current ratio expectations, and overall financial stability. How conservative is this company's capital structure?
 
 Paragraph 3: Earnings Quality & Stability - Discuss the quality and consistency of earnings based on the metrics. Would a defensive or enterprising investor be comfortable here?
 
 Paragraph 4: Final Verdict - Summarize whether this meets your classic value investing criteria and explain your signal/confidence with specific reasoning.
 
-Be specific, quote numbers, and write in Ben Graham's thoughtful, prudent style. NO generic statements."
+Be specific, quote the numbers I provided, and write in Ben Graham's thoughtful, prudent style. NO generic statements."
 }`;
 
   const message = await anthropic.messages.create({

@@ -64,11 +64,15 @@ ${quantSummary}
 
 CRITICAL: Your response MUST be thorough (minimum 300 words). Institutional investors need comprehensive deep-value analysis.
 
+Metrics for analysis:
+- P/B Ratio: ${pbRatio.toFixed(2)}
+- FCF Yield: ${(fcfYield*100).toFixed(2)}%
+
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
   "confidence": 0-100,
-  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) Asset Value Analysis - P/B ${pbRatio.toFixed(2)}, FCF ${(fcfYield*100).toFixed(2)}%, liquidation value vs market price; (2) Catalyst Identification - What event unlocks value? Turnaround, buyout, breakup?; (3) Contrarian Thesis - What's the market missing? Why are you comfortable being early and wrong?; (4) Risk/Position Sizing - Downside protection, position size for concentrated contrarian bet. Use Burry's intense, data-driven style with specific numbers."
+  "reasoning": "WRITE 300+ WORDS in 3-4 paragraphs: (1) Asset Value Analysis - Review the P/B and FCF yield provided, assess liquidation value vs market price; (2) Catalyst Identification - What event unlocks value? Turnaround, buyout, breakup?; (3) Contrarian Thesis - What's the market missing? Why are you comfortable being early and wrong?; (4) Risk/Position Sizing - Downside protection, position size for concentrated contrarian bet. Use Burry's intense, data-driven style with the specific numbers I provided."
 }`;
 
   const message = await anthropic.messages.create({
