@@ -5,6 +5,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { MarketData } from '../types';
+import { parseAgentResponse } from './parse-helper';
 import { calculateIntrinsicValue } from '../financial-analysis';
 
 const anthropic = new Anthropic({
@@ -76,14 +77,7 @@ Return JSON:
   });
 
   const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
-  let result = { signal: 'Neutral', confidence: 50, reasoning: 'Analysis incomplete' };
-  
-  try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) result = JSON.parse(jsonMatch[0]);
-  } catch (e) {
-    console.error("Failed to parse Damodaran agent response", e);
-  }
+  const result = parseAgentResponse(responseText, 'AswathDamodaran');
 
   return {
     agentName: 'AswathDamodaran',

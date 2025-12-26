@@ -5,6 +5,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { MarketData } from '../types';
+import { parseAgentResponse } from './parse-helper';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -75,14 +76,7 @@ Return JSON:
   });
 
   const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
-  let result = { signal: 'Neutral', confidence: 50, reasoning: 'Analysis incomplete' };
-  
-  try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) result = JSON.parse(jsonMatch[0]);
-  } catch (e) {
-    console.error("Failed to parse Munger agent response", e);
-  }
+  const result = parseAgentResponse(responseText, 'CharlieMunger');
 
   return {
     agentName: 'CharlieMunger',

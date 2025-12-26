@@ -425,10 +425,10 @@ export default function AIAnalysisPage() {
                   {result.personaAgents ? (
                     <div className="space-y-4">
                       {Object.entries(result.personaAgents).map(([key, agent]) => (
-                        <details key={key} className="border rounded-lg overflow-hidden group">
-                          <summary className="p-4 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer flex justify-between items-center">
+                        <details key={key} className="border border-white/10 rounded-lg overflow-hidden group">
+                          <summary className="p-4 bg-[#313131] hover:bg-[#3a3a3a] transition-colors cursor-pointer flex justify-between items-center">
                             <div className="flex items-center gap-3">
-                              <span className="font-medium capitalize">
+                              <span className="font-medium capitalize text-white">
                                 {key.replace(/([A-Z])/g, ' $1').trim()}
                               </span>
                               <Badge 
@@ -440,15 +440,15 @@ export default function AIAnalysisPage() {
                               >
                                 {agent.signal}
                               </Badge>
-                              <span className="text-sm text-muted-foreground">
+                              <span className="text-sm text-white/60">
                                 ({agent.confidence}% confidence)
                               </span>
                             </div>
-                            <span className="text-muted-foreground text-sm group-open:rotate-180 transition-transform">▼</span>
+                            <span className="text-white/60 text-sm group-open:rotate-180 transition-transform">▼</span>
                           </summary>
-                          <div className="p-4 border-t bg-background">
-                            <div className="prose prose-sm max-w-none">
-                              <pre className="whitespace-pre-wrap font-sans text-sm">{agent.analysis}</pre>
+                          <div className="p-4 border-t border-white/10 bg-[#252525]">
+                            <div className="prose prose-sm prose-invert max-w-none">
+                              <pre className="whitespace-pre-wrap font-sans text-sm text-white/90 bg-transparent">{agent.analysis}</pre>
                             </div>
                           </div>
                         </details>
