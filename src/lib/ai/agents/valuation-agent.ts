@@ -54,7 +54,7 @@ ${lastTargetPrice ? `\nIMPORTANT - Last Target Price (within 24h): $${lastTarget
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
-      max_tokens: 8192,
+      max_tokens: 4096,
       temperature: 0.1,
       messages: [
         {

@@ -177,7 +177,7 @@ PERSONA AGENT SUMMARIES:
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307', // Using Haiku for detailed analysis
-      max_tokens: 8192, // Maximum tokens for detailed comprehensive analysis
+      max_tokens: 4096, // Maximum tokens for detailed comprehensive analysis
       temperature: 0.1,
       messages: [
         {
