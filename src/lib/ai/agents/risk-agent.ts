@@ -50,7 +50,7 @@ ${marketData.insiderTransactions?.length ? `${marketData.insiderTransactions.len
 `;
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 4000,
       temperature: 0.1,
       messages: [
