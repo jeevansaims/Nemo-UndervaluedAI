@@ -23,7 +23,9 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
       const parsed = JSON.parse(jsonMatch[0]);
       result.signal = parsed.signal || result.signal;
       result.confidence = parsed.confidence || result.confidence;
-      result.reasoning = parsed.reasoning || result.reasoning;
+      result.reasoning = parsed.reasoning || '';
+
+      console.log(`[${agentName}] Parsed JSON - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning length: ${result.reasoning?.length || 0}`);
     }
   } catch (e) {
     console.error(`Failed to parse ${agentName} agent response JSON, trying fallback parsing`, e);
@@ -31,6 +33,8 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
 
   // If reasoning is still empty, try to extract it from the response
   if (!result.reasoning || result.reasoning.length < 100) {
+    console.log(`[${agentName}] Reasoning too short (${result.reasoning?.length || 0} chars), trying fallback`);
+
     // Clean up the raw response by removing JSON blocks and code fences
     const cleanedText = responseText
       .replace(/```json[\s\S]*?```/g, '')
@@ -40,9 +44,11 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
 
     if (cleanedText && cleanedText.length > 50) {
       result.reasoning = cleanedText;
+      console.log(`[${agentName}] Using cleaned text (${result.reasoning.length} chars)`);
     } else {
       // Last resort - use raw response but remove obvious JSON
       result.reasoning = responseText.replace(/^\{[\s\S]*?\}\s*/, '').trim();
+      console.log(`[${agentName}] Using raw response fallback (${result.reasoning.length} chars)`);
     }
   }
 
@@ -61,6 +67,8 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
       result.signal = 'Bearish';
     }
   }
+
+  console.log(`[${agentName}] Final result - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning: ${result.reasoning.substring(0, 100)}...`);
 
   return result;
 }
