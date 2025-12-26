@@ -34,6 +34,19 @@ interface AnalysisResult {
     financialHealth: 'Strong' | 'Moderate' | 'Weak';
     growthPotential: 'High' | 'Medium' | 'Low';
   };
+  technical?: {
+    analysis: string;
+    keyPoints?: string[];
+    trend?: 'Bullish' | 'Neutral' | 'Bearish';
+    momentum?: 'Strong' | 'Moderate' | 'Weak';
+    signal?: 'Bullish' | 'Bearish' | 'Neutral';
+  };
+  macro?: {
+    analysis: string;
+    keyPoints?: string[];
+    economicOutlook?: 'Favorable' | 'Neutral' | 'Unfavorable';
+    sectorTrend?: 'Tailwind' | 'Neutral' | 'Headwind';
+  };
   warrenBuffett?: {
     analysis: string;
     signal: 'Bullish' | 'Bearish' | 'Neutral';
@@ -247,6 +260,8 @@ export default function AIAnalysisPage() {
                       sentimentResult: result.sentiment?.analysis,
                       fundamentalResult: result.fundamental?.analysis,
                       riskResult: result.risk?.analysis,
+                      technicalResult: result.technical?.analysis,
+                      macroResult: result.macro?.analysis,
                       warrenBuffett: result.warrenBuffett,
                       personaAgents: result.personaAgents,
                     })}
@@ -351,7 +366,7 @@ export default function AIAnalysisPage() {
 
           {/* Detailed Analysis Tabs */}
           <Tabs defaultValue="final" className="w-full">
-           <TabsList className="grid w-full grid-cols-7">
+           <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="final">Final Report</TabsTrigger>
               <TabsTrigger value="warren">Warren Buffett</TabsTrigger>
               <TabsTrigger value="personas">Investor Analysts</TabsTrigger>
@@ -359,6 +374,7 @@ export default function AIAnalysisPage() {
               <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
               <TabsTrigger value="fundamental">Fundamentals</TabsTrigger>
               <TabsTrigger value="risk">Risk & Position</TabsTrigger>
+              <TabsTrigger value="peers">Peer Comparison</TabsTrigger>
             </TabsList>
 
             <TabsContent value="warren">
@@ -619,6 +635,67 @@ export default function AIAnalysisPage() {
                     </div>
                     <div className="prose prose-sm max-w-none">
                       <pre className="whitespace-pre-wrap font-sans">{result.risk.analysis}</pre>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="peers">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Peer Comparison</CardTitle>
+                  <CardDescription>
+                    Compare {result.ticker} to its industry leaders
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Comparison Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            <th className="text-left py-3 px-2 font-semibold">Company</th>
+                            <th className="text-right py-3 px-2 font-semibold">Market Cap</th>
+                            <th className="text-right py-3 px-2 font-semibold">P/E Ratio</th>
+                            <th className="text-right py-3 px-2 font-semibold">P/B Ratio</th>
+                            <th className="text-right py-3 px-2 font-semibold">Net Margin</th>
+                            <th className="text-right py-3 px-2 font-semibold">Debt/Equity</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-white/5 bg-blue-500/10">
+                            <td className="py-3 px-2 font-semibold text-blue-400">{result.ticker}</td>
+                            <td className="text-right py-3 px-2">
+                              {result.marketData.marketCap
+                                ? `$${(result.marketData.marketCap / 1e9).toFixed(2)}B`
+                                : 'N/A'}
+                            </td>
+                            <td className="text-right py-3 px-2">
+                              {result.valuation.targetPrice && result.marketData.currentPrice
+                                ? (result.marketData.currentPrice / (result.valuation.targetPrice / 15)).toFixed(2)
+                                : 'N/A'}
+                            </td>
+                            <td className="text-right py-3 px-2">N/A</td>
+                            <td className="text-right py-3 px-2">N/A</td>
+                            <td className="text-right py-3 px-2">N/A</td>
+                          </tr>
+                          <tr className="border-b border-white/5">
+                            <td colSpan={6} className="py-4 px-2 text-center text-muted-foreground italic">
+                              Peer comparison data will be available in the next update
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Analysis Text */}
+                    <div className="prose prose-sm max-w-none">
+                      <div className="text-sm text-muted-foreground mb-2">
+                        <strong>Note:</strong> Full peer comparison analysis with industry leaders including market cap,
+                        P/E ratio, P/B ratio, net margins, and debt ratios will be available in the full implementation.
+                      </div>
                     </div>
                   </div>
                 </CardContent>

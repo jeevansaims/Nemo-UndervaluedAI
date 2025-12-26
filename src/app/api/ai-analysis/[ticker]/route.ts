@@ -248,13 +248,22 @@ export async function POST(
     // Handle both 'rating' and 'recommendation', 'confidence' and 'confidenceScore'
     if (result.portfolioManager) {
       const pm = result.portfolioManager as any;
-      // Ensure both field names work
-      pm.recommendation = pm.recommendation || pm.rating;
-      pm.rating = pm.rating || pm.recommendation;
-      pm.confidenceScore = pm.confidenceScore || pm.confidence;
-      pm.confidence = pm.confidence || pm.confidenceScore;
-      pm.keyTakeaways = pm.keyTakeaways || pm.investmentThesis || [];
-      pm.finalReport = pm.finalReport || pm.analysis || pm.summary || '';
+
+      // Normalize recommendation/rating
+      const finalRecommendation = pm.rating || pm.recommendation || 'HOLD';
+      pm.recommendation = finalRecommendation;
+      pm.rating = finalRecommendation;
+
+      // Normalize confidence/confidenceScore
+      const finalConfidence = pm.confidence ?? pm.confidenceScore ?? 50;
+      pm.confidenceScore = finalConfidence;
+      pm.confidence = finalConfidence;
+
+      // Normalize key takeaways
+      pm.keyTakeaways = pm.investmentThesis || pm.keyTakeaways || [];
+
+      // Normalize final report/analysis
+      pm.finalReport = pm.analysis || pm.summary || pm.finalReport || '';
     }
 
     // 8. Store analysis record in database

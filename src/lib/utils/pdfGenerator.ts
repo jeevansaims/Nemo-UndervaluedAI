@@ -339,5 +339,5 @@ export const generateAnalysisPDF = (data: AnalysisData) => {
     doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, footerY + 6, { align: 'right' });
   }
 
-  doc.save(`${data.ticker.toUpperCase()}_Analysis_${new Date().toISOString().split('T')[0]}.pdf`);
+  doc.save(`${data.ticker.toUpperCase()} - Report.pdf`);
 };

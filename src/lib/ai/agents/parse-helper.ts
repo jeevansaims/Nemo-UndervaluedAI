@@ -10,60 +10,57 @@ export interface AgentParseResult {
 }
 
 export function parseAgentResponse(responseText: string, agentName: string): AgentParseResult {
-  let result: AgentParseResult = { 
-    signal: 'Neutral', 
-    confidence: 50, 
-    reasoning: '' 
+  let result: AgentParseResult = {
+    signal: 'Neutral',
+    confidence: 50,
+    reasoning: ''
   };
-  
+
   try {
-    // Try to extract JSON from the response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    // Try to extract JSON from the response - be more precise to avoid partial matches
+    const jsonMatch = responseText.match(/\{[\s\S]*?"signal"[\s\S]*?"confidence"[\s\S]*?"reasoning"[\s\S]*?\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      
-      // Extract fields from parsed JSON
-      if (parsed.signal) result.signal = parsed.signal;
-      if (parsed.confidence) result.confidence = parsed.confidence;
-      if (parsed.reasoning) result.reasoning = parsed.reasoning;
+      result.signal = parsed.signal || result.signal;
+      result.confidence = parsed.confidence || result.confidence;
+      result.reasoning = parsed.reasoning || result.reasoning;
     }
   } catch (e) {
-    console.error(`Failed to parse ${agentName} agent JSON response`, e);
+    console.error(`Failed to parse ${agentName} agent response JSON, trying fallback parsing`, e);
   }
-  
-  // If we successfully parsed JSON but reasoning is empty or incomplete, use full response
-  if (!result.reasoning || result.reasoning === 'Analysis incomplete' || result.reasoning.length < 100) {
-    // Remove any JSON blocks from the responseText to get clean text
-    let cleanedText = responseText;
-    
-    // Remove JSON objects (try multiple patterns)
-    cleanedText = cleanedText.replace(/```json[\s\S]*?```/g, '');
-    cleanedText = cleanedText.replace(/```[\s\S]*?```/g, '');
-    cleanedText = cleanedText.replace(/\{[\s\S]*?\}/g, ''); // Remove all JSON objects
-    cleanedText = cleanedText.trim();
-    
+
+  // If reasoning is still empty, try to extract it from the response
+  if (!result.reasoning || result.reasoning.length < 100) {
+    // Clean up the raw response by removing JSON blocks and code fences
+    const cleanedText = responseText
+      .replace(/```json[\s\S]*?```/g, '')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/\{[\s\S]*?"signal"[\s\S]*?"confidence"[\s\S]*?"reasoning"[\s\S]*?\}/g, '')
+      .trim();
+
     if (cleanedText && cleanedText.length > 50) {
       result.reasoning = cleanedText;
     } else {
-      // Last resort - if parsed JSON had some reasoning, keep it; otherwise use raw
-      if (!result.reasoning || result.reasoning.length < 20) {
-        result.reasoning = responseText;
-      }
+      // Last resort - use raw response but remove obvious JSON
+      result.reasoning = responseText.replace(/^\{[\s\S]*?\}\s*/, '').trim();
     }
   }
-  
-  // Extract signal/confidence from text if JSON parsing completely failed
-  if (result.signal === 'Neutral' && result.confidence === 50 && result.reasoning !== '') {
+
+  // Extract signal/confidence from text ONLY if JSON parsing completely failed
+  if (result.confidence === 50 && !responseText.includes('"confidence"')) {
+    // Try to extract confidence percentage from text
+    const confMatch = result.reasoning.match(/(\d+)%?\s*confidence/i);
+    if (confMatch) {
+      result.confidence = parseInt(confMatch[1]);
+    }
+
     // Try to find signal mentions in text
-    const lowerReasoning = result.reasoning.toLowerCase();
-    if (lowerReasoning.includes('bullish') && !lowerReasoning.includes('not bullish') && !lowerReasoning.includes('bearish')) {
+    if (result.reasoning.toLowerCase().includes('bullish')) {
       result.signal = 'Bullish';
-      result.confidence = 65;
-    } else if (lowerReasoning.includes('bearish') && !lowerReasoning.includes('not bearish')) {
+    } else if (result.reasoning.toLowerCase().includes('bearish')) {
       result.signal = 'Bearish';
-      result.confidence = 65;
     }
   }
-  
+
   return result;
 }
