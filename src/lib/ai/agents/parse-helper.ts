@@ -21,31 +21,51 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
   };
 
   try {
-    // Try to extract JSON from the response - be more precise to avoid partial matches
+    // Try to extract JSON from the response
     const jsonMatch = responseText.match(/\{[\s\S]*?"signal"[\s\S]*?"confidence"[\s\S]*?"reasoning"[\s\S]*?\}/);
     if (jsonMatch) {
-      console.log(`[${agentName}] FOUND JSON MATCH (first 300 chars):`, jsonMatch[0].substring(0, 300));
+      console.log(`[${agentName}] FOUND JSON MATCH (first 500 chars):`, jsonMatch[0].substring(0, 500));
       
-      // CRITICAL FIX: Escape control characters (newlines, tabs, etc.) before parsing
-      // Claude returns multi-paragraph text with raw newlines which break JSON.parse()
-      const sanitizedJson = jsonMatch[0]
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r')
-        .replace(/\t/g, '\\t');
-      
-      console.log(`[${agentName}] SANITIZED JSON (first 300 chars):`, sanitizedJson.substring(0, 300));
-      
-      const parsed = JSON.parse(sanitizedJson);
-      result.signal = parsed.signal || result.signal;
-      result.confidence = parsed.confidence || result.confidence;
-      result.reasoning = parsed.reasoning || '';
-      console.log(`[${agentName}] PARSED SUCCESSFULLY - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning length: ${result.reasoning.length}`);
+      // APPROACH: Try JSON.parse first (works if Claude returns valid JSON)
+      // If that fails, escape newlines within the "reasoning" value only
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        result.signal = parsed.signal || result.signal;
+        result.confidence = parsed.confidence || result.confidence;
+        result.reasoning = parsed.reasoning || '';
+        console.log(`[${agentName}] PARSED SUCCESSFULLY (no sanitization needed) - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning length: ${result.reasoning.length}`);
+      } catch (parseError) {
+        console.log(`[${agentName}] Direct parse failed, trying sanitization:`, parseError);
+        
+        // CRITICAL FIX: Escape newlines ONLY within string values, not structural JSON whitespace
+        // Use a more targeted replacement that preserves JSON formatting but fixes string content
+        const sanitizedJson = jsonMatch[0]
+          // First, let's try to extract and fix the reasoning field specifically
+          .replace(/"reasoning":\s*"([\s\S]*?)(?="(?:\s*,|\s*\}))/g, (match, reasoningText) => {
+            // Escape control characters within the reasoning text
+            const escapedReasoning = reasoningText
+              .replace(/\\/g, '\\\\')  // Escape backslashes first
+              .replace(/"/g, '\\"')    // Escape quotes
+              .replace(/\n/g, '\\n')   // Escape newlines
+              .replace(/\r/g, '\\r')   // Escape carriage returns
+              .replace(/\t/g, '\\t');  // Escape tabs
+            return `"reasoning": "${escapedReasoning}"`;
+          });
+        
+        console.log(`[${agentName}] SANITIZED JSON (first 300 chars):`, sanitizedJson.substring(0, 300));
+        
+        const parsed = JSON.parse(sanitizedJson);
+        result.signal = parsed.signal || result.signal;
+        result.confidence = parsed.confidence || result.confidence;
+        result.reasoning = parsed.reasoning || '';
+        console.log(`[${agentName}] PARSED SUCCESSFULLY after sanitization - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning length: ${result.reasoning.length}`);
+      }
     } else {
       console.log(`[${agentName}] NO JSON MATCH FOUND - trying fallback`);
     }
   } catch (e) {
-    console.error(`[${agentName}] JSON PARSE ERROR:`, e);
-    console.error(`[${agentName}] Failed to parse JSON, trying fallback parsing`);
+    console.error(`[${agentName}] JSON PARSE ERROR (all attempts failed):`, e);
+    console.error(`[${agentName}] Trying fallback text extraction`);
   }
 
   // If reasoning is still empty, try to extract it from the response
