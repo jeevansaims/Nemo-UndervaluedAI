@@ -21,36 +21,45 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      result = { ...result, ...parsed };
+      
+      // Extract fields from parsed JSON
+      if (parsed.signal) result.signal = parsed.signal;
+      if (parsed.confidence) result.confidence = parsed.confidence;
+      if (parsed.reasoning) result.reasoning = parsed.reasoning;
     }
   } catch (e) {
-    console.error(`Failed to parse ${agentName} agent response, using raw text`, e);
+    console.error(`Failed to parse ${agentName} agent JSON response`, e);
   }
   
-  // If reasoning is empty or too short, use the full response as analysis
+  // If we successfully parsed JSON but reasoning is empty or incomplete, use full response
   if (!result.reasoning || result.reasoning === 'Analysis incomplete' || result.reasoning.length < 100) {
-    // Clean up the raw response by removing JSON blocks
-    const cleanedText = responseText
-      .replace(/```json[\s\S]*?```/g, '')
-      .replace(/```[\s\S]*?```/g, '')
-      .replace(/\{[\s\S]*?"reasoning"[\s\S]*?\}/g, '')
-      .trim();
+    // Remove any JSON blocks from the responseText to get clean text
+    let cleanedText = responseText;
+    
+    // Remove JSON objects (try multiple patterns)
+    cleanedText = cleanedText.replace(/```json[\s\S]*?```/g, '');
+    cleanedText = cleanedText.replace(/```[\s\S]*?```/g, '');
+    cleanedText = cleanedText.replace(/\{[\s\S]*?\}/g, ''); // Remove all JSON objects
+    cleanedText = cleanedText.trim();
     
     if (cleanedText && cleanedText.length > 50) {
       result.reasoning = cleanedText;
     } else {
-      // Last resort - use raw response
-      result.reasoning = responseText;
+      // Last resort - if parsed JSON had some reasoning, keep it; otherwise use raw
+      if (!result.reasoning || result.reasoning.length < 20) {
+        result.reasoning = responseText;
+      }
     }
   }
   
-  // Extract signal/confidence from text if JSON parsing failed
-  if (result.confidence === 50 && result.reasoning !== '') {
+  // Extract signal/confidence from text if JSON parsing completely failed
+  if (result.signal === 'Neutral' && result.confidence === 50 && result.reasoning !== '') {
     // Try to find signal mentions in text
-    if (result.reasoning.toLowerCase().includes('bullish')) {
+    const lowerReasoning = result.reasoning.toLowerCase();
+    if (lowerReasoning.includes('bullish') && !lowerReasoning.includes('not bullish') && !lowerReasoning.includes('bearish')) {
       result.signal = 'Bullish';
       result.confidence = 65;
-    } else if (result.reasoning.toLowerCase().includes('bearish')) {
+    } else if (lowerReasoning.includes('bearish') && !lowerReasoning.includes('not bearish')) {
       result.signal = 'Bearish';
       result.confidence = 65;
     }
