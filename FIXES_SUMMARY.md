@@ -132,6 +132,32 @@
    - Cache competitor data to reduce API calls
    - Add export to CSV option for peer comparison table
 
+## Latest Issue Fixed (2025-12-26)
+
+### 7. ✅ Analysis Button Not Working - max_tokens Limit Exceeded
+**Problem:** Analysis button appeared to do nothing when clicked. Button stayed as "Analyze Stock" instead of showing "Analyzing..."
+
+**Root Cause:**
+- Changed max_tokens from 4096 to 8192 across all agents
+- Claude 3 Haiku (claude-3-haiku-20240307) has a hard limit of 4096 output tokens
+- API was returning 500 error: `"max_tokens: 8192 > 4096, which is the maximum allowed number of output tokens for claude-3-haiku-20240307"`
+- Frontend was catching the error but not providing clear feedback to user
+
+**Fixes Applied:**
+- **All 21 Agent Files:** Reverted `max_tokens: 8192` back to `max_tokens: 4096`
+- Added comprehensive debug logging to diagnose the issue
+- Removed debug logging after fix was confirmed
+
+**Files Modified:**
+- src/lib/ai/agents/*.ts (all 21 agent files)
+- src/app/(platform)/ai-analysis/page.tsx (debug logging)
+
+**Lesson Learned:**
+- Claude 3 Haiku: max 4096 output tokens
+- Claude 3 Sonnet: max 8192 output tokens
+- Claude 3 Opus: max 8192 output tokens
+- Always check model-specific limits before changing token settings
+
 ## Deployment Notes
 
 - All changes are backward compatible
