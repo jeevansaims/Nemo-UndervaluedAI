@@ -25,7 +25,17 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
     const jsonMatch = responseText.match(/\{[\s\S]*?"signal"[\s\S]*?"confidence"[\s\S]*?"reasoning"[\s\S]*?\}/);
     if (jsonMatch) {
       console.log(`[${agentName}] FOUND JSON MATCH (first 300 chars):`, jsonMatch[0].substring(0, 300));
-      const parsed = JSON.parse(jsonMatch[0]);
+      
+      // CRITICAL FIX: Escape control characters (newlines, tabs, etc.) before parsing
+      // Claude returns multi-paragraph text with raw newlines which break JSON.parse()
+      const sanitizedJson = jsonMatch[0]
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+      
+      console.log(`[${agentName}] SANITIZED JSON (first 300 chars):`, sanitizedJson.substring(0, 300));
+      
+      const parsed = JSON.parse(sanitizedJson);
       result.signal = parsed.signal || result.signal;
       result.confidence = parsed.confidence || result.confidence;
       result.reasoning = parsed.reasoning || '';
