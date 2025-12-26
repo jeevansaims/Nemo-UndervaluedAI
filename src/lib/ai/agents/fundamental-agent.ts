@@ -56,7 +56,7 @@ Financial Metrics:
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
-      max_tokens: 4000,
+      max_tokens: 8192,
       temperature: 0.1,
       messages: [
         {

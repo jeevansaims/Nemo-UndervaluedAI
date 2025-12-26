@@ -665,6 +665,7 @@ export default function AIAnalysisPage() {
                           </tr>
                         </thead>
                         <tbody>
+                          {/* Current Stock Row - Highlighted */}
                           <tr className="border-b border-white/5 bg-blue-500/10">
                             <td className="py-3 px-2 font-semibold text-blue-400">{result.ticker}</td>
                             <td className="text-right py-3 px-2">
@@ -673,30 +674,61 @@ export default function AIAnalysisPage() {
                                 : 'N/A'}
                             </td>
                             <td className="text-right py-3 px-2">
-                              {result.valuation.targetPrice && result.marketData.currentPrice
-                                ? (result.marketData.currentPrice / (result.valuation.targetPrice / 15)).toFixed(2)
-                                : 'N/A'}
+                              {(result as any).marketData.peRatio?.toFixed(2) || 'N/A'}
+                            </td>
+                            <td className="text-right py-3 px-2">
+                              {(result as any).marketData.pbRatio?.toFixed(2) || 'N/A'}
                             </td>
                             <td className="text-right py-3 px-2">N/A</td>
-                            <td className="text-right py-3 px-2">N/A</td>
-                            <td className="text-right py-3 px-2">N/A</td>
-                          </tr>
-                          <tr className="border-b border-white/5">
-                            <td colSpan={6} className="py-4 px-2 text-center text-muted-foreground italic">
-                              Peer comparison data will be available in the next update
+                            <td className="text-right py-3 px-2">
+                              {(result as any).marketData.debtToEquity?.toFixed(2) || 'N/A'}
                             </td>
                           </tr>
+
+                          {/* Peer Rows */}
+                          {(result as any).peerComparison?.peerData && (result as any).peerComparison.peerData.length > 0 ? (
+                            (result as any).peerComparison.peerData.map((peer: any, idx: number) => (
+                              <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition">
+                                <td className="py-3 px-2 font-medium">{peer.ticker}</td>
+                                <td className="text-right py-3 px-2">
+                                  {peer.marketCap
+                                    ? `$${(peer.marketCap / 1e9).toFixed(2)}B`
+                                    : 'N/A'}
+                                </td>
+                                <td className="text-right py-3 px-2">
+                                  {peer.peRatio?.toFixed(2) || 'N/A'}
+                                </td>
+                                <td className="text-right py-3 px-2">
+                                  {peer.pbRatio?.toFixed(2) || 'N/A'}
+                                </td>
+                                <td className="text-right py-3 px-2">
+                                  {peer.netMargin ? `${(peer.netMargin * 100).toFixed(2)}%` : 'N/A'}
+                                </td>
+                                <td className="text-right py-3 px-2">
+                                  {peer.debtToEquity?.toFixed(2) || 'N/A'}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr className="border-b border-white/5">
+                              <td colSpan={6} className="py-4 px-2 text-center text-muted-foreground italic">
+                                Loading peer comparison data...
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Analysis Text */}
-                    <div className="prose prose-sm max-w-none">
-                      <div className="text-sm text-muted-foreground mb-2">
-                        <strong>Note:</strong> Full peer comparison analysis with industry leaders including market cap,
-                        P/E ratio, P/B ratio, net margins, and debt ratios will be available in the full implementation.
+                    {(result as any).peerComparison?.analysis && (
+                      <div className="prose prose-sm max-w-none mt-6">
+                        <h4 className="font-semibold mb-3">Competitive Analysis</h4>
+                        <pre className="whitespace-pre-wrap font-sans text-sm">
+                          {(result as any).peerComparison.analysis}
+                        </pre>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
