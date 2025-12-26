@@ -176,7 +176,7 @@ PERSONA AGENT SUMMARIES:
     }
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20240620', // Using Haiku for now (Sonnet models not available)
+      model: 'claude-3-5-sonnet-latest', // Using Haiku for now (Sonnet models not available)
       max_tokens: 4096, // Claude 3 Haiku maximum output limit
       temperature: 0.1,
       messages: [
