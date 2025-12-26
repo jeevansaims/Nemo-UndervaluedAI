@@ -26,12 +26,27 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
     if (jsonMatch) {
       console.log(`[${agentName}] FOUND JSON MATCH (first 500 chars):`, jsonMatch[0].substring(0, 500));
       
-      // CRITICAL FIX: Replace ALL newlines/tabs/CR with spaces
-      // This is safe because:
-      // 1. Structural JSON whitespace (formatting newlines) becomes valid spaces
-      // 2. Newlines within string values (reasoning text) become spaces, preserving all text
-      // 3. No need to distinguish between structural vs string-value newlines
-      const sanitizedJson = jsonMatch[0]
+      // CRITICAL FIX: Claude's response contains:
+      // 1. Newlines/tabs/CR in both structure and content -> replace with spaces
+      // 2. Unescaped quotes within string values (e.g., "moat") -> must escape  
+      // First, extract and fix the reasoning field specifically
+      let sanitizedJson = jsonMatch[0];
+      
+      // Target ONLY the reasoning field value and escape quotes within it
+      sanitizedJson = sanitizedJson.replace(
+        /"reasoning":\s*"([\s\S]*?)"/g,
+        (match, reasoningText) => {
+          // Escape any literal quotes within the reasoning text
+          // But be careful not to escape the closing quote
+         const escapedText = reasoningText
+            .replace(/\\/g, '\\\\')  // Escape backslashes first
+            .replace(/"/g, '\\"');   // Escape internal quotes
+          return `"reasoning": "${escapedText}"`;
+        }
+      );
+      
+      // Now replace newlines/tabs/CR globally (safe after escaping quotes)
+      sanitizedJson = sanitizedJson
         .replace(/\n/g, ' ')
         .replace(/\r/g, ' ')
         .replace(/\t/g, ' ');
