@@ -55,11 +55,17 @@ ${quantSummary}
 - BEARISH: Declining products, poor R&D, weak management = Avoid
 - NEUTRAL: Mixed signals, needs more scuttlebutt research
 
-Return JSON:
+IMPORTANT JSON FORMATTING RULES:
+- Your response must be valid JSON that can be parsed by JSON.parse()
+- In the reasoning field, replace ALL newlines with spaces (write as one continuous paragraph)
+- Do NOT use quotes within the reasoning text - use 'single quotes' or rephrase
+- Escape any special characters properly
+
+Return ONLY valid JSON with this structure (no markdown, no code blocks):
 {
-  "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": 0-100,
-  "reasoning": "Provide 2-4 paragraphs in Phil Fisher's thorough, qualitative style. Discuss product pipeline, management quality, and whether this is a company worth holding for decades."
+  "signal": "Bullish or Bearish or Neutral",
+  "confidence": 70,
+  "reasoning": "Write 300+ words of detailed analysis in one continuous paragraph with spaces instead of newlines. Cover: (1) Sales and Products - evaluate revenue growth ${revenueGrowth.toFixed(1)}% and market potential for sustained growth (2) R and D Effectiveness - assess innovation pipeline and product development commitment (3) Profit Margins - analyze ROE ${(roe * 100).toFixed(1)}% and margin sustainability (4) Management Quality - evaluate integrity and long-term vision. Use 'single quotes' for emphasis. Apply your 15-point scuttlebutt methodology and thorough qualitative style."
 }`;
 
   const message = await anthropic.messages.create({

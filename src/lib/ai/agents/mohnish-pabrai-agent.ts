@@ -62,11 +62,17 @@ ${quantSummary}
 - BEARISH: High downside risk, limited upside, complex or declining business = Avoid
 - NEUTRAL: Some appeal but not a "no brainer" - keep on watchlist
 
-Return JSON:
+IMPORTANT JSON FORMATTING RULES:
+- Your response must be valid JSON that can be parsed by JSON.parse()
+- In the reasoning field, replace ALL newlines with spaces (write as one continuous paragraph)
+- Do NOT use quotes within the reasoning text - use 'single quotes' or rephrase
+- Escape any special characters properly
+
+Return ONLY valid JSON with this structure (no markdown, no code blocks):
 {
-  "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": 0-100,
-  "reasoning": "Provide 2-4 paragraphs in Mohnish Pabrai's clear, practical Dhandho style. Discuss the risk/reward asymmetry and whether this meets your strict criteria for a concentrated bet."
+  "signal": "Bullish or Bearish or Neutral",
+  "confidence": 75,
+  "reasoning": "Write 300+ words of detailed analysis in one continuous paragraph with spaces instead of newlines. Cover: (1) Downside Protection - analyze P/B ${pbRatio.toFixed(2)} and D/E ${debtToEquity.toFixed(2)} for worst-case scenario (2) Upside Potential - evaluate ROE ${(roe * 100).toFixed(1)}% for potential returns if thesis plays out (3) Dhandho Test - assess whether this is truly 'heads I win tails I do not lose much' (4) Portfolio Fit - determine if this merits a concentrated 10%+ position. Use 'single quotes' for emphasis. Apply your practical Dhandho framework and no-brainer investment criteria."
 }`;
 
   const message = await anthropic.messages.create({
