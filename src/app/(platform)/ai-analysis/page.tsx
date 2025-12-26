@@ -637,7 +637,7 @@ export default function AIAnalysisPage() {
               <div className="space-y-2 text-sm text-muted-foreground">
                 <p>
                   <strong>How it works:</strong> Our AI system uses multiple specialized agents powered by
-                  Claude 3 Haiku (Anthropic) to analyze stocks from different perspectives:
+                  Claude 3.5 Sonnet (Anthropic) to analyze stocks from different perspectives:
                 </p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Valuation Agent - Deep value analysis and intrinsic value calculation</li>
