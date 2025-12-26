@@ -242,10 +242,12 @@ export default function AIAnalysisPage() {
                       marketCap: result.marketData.marketCap,
                       createdAt: new Date(),
                       finalReport: result.portfolioManager.finalReport,
-                      valuationResult: result.valuation.analysis,
-                      sentimentResult: result.sentiment.analysis,
-                      fundamentalResult: result.fundamental.analysis,
-                      riskResult: result.risk.analysis,
+                      valuationResult: result.valuation?.analysis,
+                      sentimentResult: result.sentiment?.analysis,
+                      fundamentalResult: result.fundamental?.analysis,
+                      riskResult: result.risk?.analysis,
+                      warrenBuffett: result.warrenBuffett,
+                      personaAgents: result.personaAgents,
                     })}
                   >
                     <Download className="mr-2 h-4 w-4" />

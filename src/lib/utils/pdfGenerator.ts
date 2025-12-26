@@ -1,6 +1,16 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+interface PersonaAgent {
+  agentName?: string;
+  analysis: string;
+  signal: string;
+  confidence: number;
+  moatScore?: number;
+  intrinsicValue?: number;
+  marginOfSafety?: number;
+}
+
 interface AnalysisData {
   ticker: string;
   recommendation?: string;
@@ -14,164 +24,320 @@ interface AnalysisData {
   sentimentResult?: string;
   fundamentalResult?: string;
   riskResult?: string;
-  warrenBuffett?: {
-    analysis: string;
-    signal: string;
-    moatScore: number;
-    intrinsicValue: number;
-    marginOfSafety: number;
-  };
+  technicalResult?: string;
+  macroResult?: string;
+  // Persona Agents
+  warrenBuffett?: PersonaAgent;
+  benGraham?: PersonaAgent;
+  charlieMunger?: PersonaAgent;
+  peterLynch?: PersonaAgent;
+  cathieWood?: PersonaAgent;
+  michaelBurry?: PersonaAgent;
+  billAckman?: PersonaAgent;
+  philFisher?: PersonaAgent;
+  stanleyDruckenmiller?: PersonaAgent;
+  aswathDamodaran?: PersonaAgent;
+  mohnishPabrai?: PersonaAgent;
+  rakeshJhunjhunwala?: PersonaAgent;
+  personaAgents?: Record<string, PersonaAgent>;
 }
+
+// Dark theme colors
+const COLORS = {
+  background: [18, 18, 18] as [number, number, number],      // #121212
+  surface: [30, 30, 30] as [number, number, number],         // #1e1e1e
+  surfaceLight: [45, 45, 45] as [number, number, number],    // #2d2d2d
+  primary: [99, 102, 241] as [number, number, number],       // Indigo
+  success: [34, 197, 94] as [number, number, number],        // Green
+  danger: [239, 68, 68] as [number, number, number],         // Red
+  warning: [234, 179, 8] as [number, number, number],        // Yellow
+  textPrimary: [255, 255, 255] as [number, number, number],  // White
+  textSecondary: [156, 163, 175] as [number, number, number], // Gray
+  textMuted: [107, 114, 128] as [number, number, number],    // Darker gray
+  accent: [139, 92, 246] as [number, number, number],        // Purple
+};
 
 export const generateAnalysisPDF = (data: AnalysisData) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
   
+  // Set dark background for entire page
+  const setDarkBackground = () => {
+    doc.setFillColor(...COLORS.background);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  };
+  
+  setDarkBackground();
+
   // --- Header ---
-  doc.setFillColor(10, 10, 10); // Dark background
-  doc.rect(0, 0, pageWidth, 40, 'F');
+  doc.setFillColor(...COLORS.surface);
+  doc.rect(0, 0, pageWidth, 45, 'F');
   
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
+  // Gradient-like effect
+  doc.setFillColor(...COLORS.primary);
+  doc.rect(0, 0, 5, 45, 'F');
+  
+  doc.setTextColor(...COLORS.textPrimary);
+  doc.setFontSize(28);
   doc.setFont('helvetica', 'bold');
-  doc.text(data.ticker.toUpperCase(), 14, 20);
+  doc.text(data.ticker.toUpperCase(), 14, 22);
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text('AI Investment Analysis Report', 14, 30);
+  doc.setTextColor(...COLORS.textSecondary);
+  doc.text('AI Investment Analysis Report', 14, 33);
   
   const dateStr = data.createdAt 
     ? new Date(data.createdAt).toLocaleDateString() 
     : new Date().toLocaleDateString();
   
-  doc.text(dateStr, pageWidth - 14, 20, { align: 'right' });
+  doc.setTextColor(...COLORS.textMuted);
+  doc.text(dateStr, pageWidth - 14, 22, { align: 'right' });
+  doc.text('Powered by Claude AI', pageWidth - 14, 33, { align: 'right' });
 
-  // --- Summary Metrics ---
-  const yStart = 50;
+  // --- Summary Metrics Card ---
+  const yStart = 55;
+  
+  // Card background
+  doc.setFillColor(...COLORS.surface);
+  doc.roundedRect(10, yStart, pageWidth - 20, 35, 3, 3, 'F');
   
   // Recommendation Box
-  const recColor = 
-    data.recommendation === 'BUY' ? [34, 197, 94] : // Green
-    data.recommendation === 'SELL' ? [239, 68, 68] : // Red
-    [234, 179, 8]; // Yellow (Hold)
+  const recColor: [number, number, number] = 
+    data.recommendation === 'BUY' ? COLORS.success :
+    data.recommendation === 'SELL' ? COLORS.danger :
+    COLORS.warning;
 
-  doc.setFillColor(recColor[0], recColor[1], recColor[2]);
-  doc.roundedRect(14, yStart, 40, 20, 3, 3, 'F');
+  doc.setFillColor(...recColor);
+  doc.roundedRect(15, yStart + 5, 45, 25, 3, 3, 'F');
   
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(10);
-  doc.text('RECOMMENDATION', 34, yStart + 6, { align: 'center' });
-  doc.setFontSize(14);
+  doc.setTextColor(...COLORS.textPrimary);
+  doc.setFontSize(8);
+  doc.text('RECOMMENDATION', 37.5, yStart + 12, { align: 'center' });
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text(data.recommendation || 'N/A', 34, yStart + 15, { align: 'center' });
+  doc.text(data.recommendation || 'N/A', 37.5, yStart + 24, { align: 'center' });
 
-  // Metrics Table-like display
-  doc.setTextColor(0, 0, 0);
+  // Metrics display
+  doc.setTextColor(...COLORS.textSecondary);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
+  doc.setFontSize(9);
 
   const formatCurrency = (val?: number) => val ? `$${val.toFixed(2)}` : 'N/A';
   
-  doc.text('Current Price:', 70, yStart + 6);
+  // Column 2: Prices
+  doc.text('Current Price', 75, yStart + 12);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(data.currentPrice), 100, yStart + 6);
-
+  doc.setTextColor(...COLORS.textPrimary);
+  doc.text(formatCurrency(data.currentPrice), 75, yStart + 20);
+  
   doc.setFont('helvetica', 'normal');
-  doc.text('Target Price:', 70, yStart + 14);
+  doc.setTextColor(...COLORS.textSecondary);
+  doc.text('Target Price', 75, yStart + 28);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(data.targetPrice), 100, yStart + 14);
+  doc.setTextColor(...COLORS.success);
+  doc.text(formatCurrency(data.targetPrice), 95, yStart + 28);
 
+  // Column 3: Confidence & Upside
+  doc.setTextColor(...COLORS.textSecondary);
   doc.setFont('helvetica', 'normal');
-  doc.text('Confidence Score:', 140, yStart + 6);
+  doc.text('Confidence', 130, yStart + 12);
   doc.setFont('helvetica', 'bold');
-  doc.text(data.confidenceScore ? `${data.confidenceScore}%` : 'N/A', 175, yStart + 6);
-
-  doc.setFont('helvetica', 'normal');
-  doc.text('Upside Potential:', 140, yStart + 14);
-  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.primary);
+  doc.text(data.confidenceScore ? `${data.confidenceScore}%` : 'N/A', 130, yStart + 20);
   
   const upside = (data.targetPrice && data.currentPrice) 
     ? ((data.targetPrice - data.currentPrice) / data.currentPrice) * 100 
     : null;
-    
-  doc.setTextColor(upside && upside > 0 ? 34 : 220, upside && upside > 0 ? 197 : 0, 0);
-  doc.text(upside ? `${upside > 0 ? '+' : ''}${upside.toFixed(1)}%` : 'N/A', 175, yStart + 14);
   
-  // Reset Color
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(...COLORS.textSecondary);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Upside Potential', 165, yStart + 12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(upside && upside > 0 ? COLORS.success[0] : COLORS.danger[0], 
+                   upside && upside > 0 ? COLORS.success[1] : COLORS.danger[1],
+                   upside && upside > 0 ? COLORS.success[2] : COLORS.danger[2]);
+  doc.text(upside ? `${upside > 0 ? '+' : ''}${upside.toFixed(1)}%` : 'N/A', 165, yStart + 20);
 
   // --- Executive Summary ---
-  let finalY = yStart + 30;
+  let finalY = yStart + 45;
   
-  doc.setFontSize(14);
+  doc.setFillColor(...COLORS.surface);
+  doc.roundedRect(10, finalY, pageWidth - 20, 8, 2, 2, 'F');
+  doc.setFillColor(...COLORS.accent);
+  doc.rect(10, finalY, 3, 8, 'F');
+  
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Executive Summary', 14, finalY);
+  doc.setTextColor(...COLORS.textPrimary);
+  doc.text('Executive Summary', 18, finalY + 6);
   
-  doc.setFontSize(10);
+  finalY += 14;
+  
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...COLORS.textSecondary);
   
   const splitSummary = doc.splitTextToSize(data.finalReport || 'No summary available.', pageWidth - 28);
-  doc.text(splitSummary, 14, finalY + 8);
+  doc.text(splitSummary, 14, finalY);
   
-  finalY += 10 + (splitSummary.length * 5);
+  finalY += (splitSummary.length * 4.5) + 10;
 
-  // --- Detailed Analysis Sections ---
-  
-  const sections = [
-    { title: 'Valuation Analysis', content: data.valuationResult },
-    { title: 'Sentiment Analysis', content: data.sentimentResult },
-    { title: 'Fundamental Analysis', content: data.fundamentalResult },
-    { title: 'Risk Assessment', content: data.riskResult },
-  ];
-
-  if (data.warrenBuffett) {
-    const buffettContent = `
-Signal: ${data.warrenBuffett.signal}
-Moat Score: ${data.warrenBuffett.moatScore}/5
-Intrinsic Value: $${(data.warrenBuffett.intrinsicValue / 1e9).toFixed(2)}B
-Margin of Safety: ${(data.warrenBuffett.marginOfSafety * 100).toFixed(1)}%
-
-Analysis:
-${data.warrenBuffett.analysis}`;
-    sections.splice(1, 0, { title: 'Warren Buffett Analysis', content: buffettContent });
-  }
-
-  sections.forEach(section => {
-    if (!section.content) return;
+  // --- Helper function for sections ---
+  const addSection = (title: string, content: string, accentColor: [number, number, number] = COLORS.primary) => {
+    if (!content) return;
 
     // Check if we need a new page
-    if (finalY > 250) {
+    const estimatedHeight = doc.splitTextToSize(content, pageWidth - 28).length * 4.5 + 20;
+    if (finalY + estimatedHeight > pageHeight - 30) {
       doc.addPage();
+      setDarkBackground();
       finalY = 20;
     }
 
-    finalY += 10;
+    // Section header
+    doc.setFillColor(...COLORS.surface);
+    doc.roundedRect(10, finalY, pageWidth - 20, 8, 2, 2, 'F');
+    doc.setFillColor(...accentColor);
+    doc.rect(10, finalY, 3, 8, 'F');
     
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.setFillColor(240, 240, 240);
-    doc.rect(14, finalY - 6, pageWidth - 28, 8, 'F'); // Section header bg
-    doc.text(section.title, 16, finalY);
+    doc.setTextColor(...COLORS.textPrimary);
+    doc.text(title, 18, finalY + 6);
     
-    finalY += 8;
+    finalY += 12;
     
-    doc.setFontSize(10);
+    // Content
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    const splitContent = doc.splitTextToSize(section.content, pageWidth - 28);
+    doc.setTextColor(...COLORS.textSecondary);
+    const splitContent = doc.splitTextToSize(content, pageWidth - 28);
     doc.text(splitContent, 14, finalY);
     
-    finalY += (splitContent.length * 5);
+    finalY += (splitContent.length * 4.5) + 8;
+  };
+
+  // --- Core Analysis Sections ---
+  addSection('📊 Valuation Analysis', data.valuationResult || '', COLORS.primary);
+  addSection('📈 Technical Analysis', data.technicalResult || '', COLORS.accent);
+  addSection('📋 Fundamental Analysis', data.fundamentalResult || '', COLORS.success);
+  addSection('💬 Sentiment Analysis', data.sentimentResult || '', COLORS.warning);
+  addSection('⚠️ Risk Assessment', data.riskResult || '', COLORS.danger);
+  addSection('🌍 Macro Analysis', data.macroResult || '', COLORS.primary);
+
+  // --- Persona Agent Analyses ---
+  // Add a new page for persona agents
+  doc.addPage();
+  setDarkBackground();
+  finalY = 20;
+  
+  // Header for persona section
+  doc.setFillColor(...COLORS.surface);
+  doc.rect(0, 0, pageWidth, 30, 'F');
+  doc.setFillColor(...COLORS.accent);
+  doc.rect(0, 0, 5, 30, 'F');
+  
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.textPrimary);
+  doc.text('🎯 Investor Analyst Perspectives', 14, 18);
+  
+  finalY = 40;
+  
+  // Process persona agents - can come from individual fields OR personaAgents object
+  const personaNames: Record<string, string> = {
+    warrenBuffett: '🏛️ Warren Buffett',
+    benGraham: '📚 Ben Graham',
+    charlieMunger: '🧠 Charlie Munger',
+    peterLynch: '📈 Peter Lynch',
+    cathieWood: '🚀 Cathie Wood',
+    michaelBurry: '🔍 Michael Burry',
+    billAckman: '🎯 Bill Ackman',
+    philFisher: '🔬 Phil Fisher',
+    stanleyDruckenmiller: '🌐 Stanley Druckenmiller',
+    aswathDamodaran: '📊 Aswath Damodaran',
+    mohnishPabrai: '💎 Mohnish Pabrai',
+    rakeshJhunjhunwala: '🐂 Rakesh Jhunjhunwala',
+  };
+
+  // Get all persona agents from both sources
+  const allPersonas: Record<string, PersonaAgent> = { ...data.personaAgents };
+  
+  // Add individual fields if they exist
+  Object.keys(personaNames).forEach(key => {
+    const agentData = (data as any)[key];
+    if (agentData && !allPersonas[key]) {
+      allPersonas[key] = agentData;
+    }
   });
 
-  // --- Footer ---
-  const footerY = doc.internal.pageSize.height - 20;
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  doc.text(
-    'Disclaimer: This report is generated by AI for informational purposes only. It does not constitute financial advice. ' +
-    'Please conduct your own due diligence before making investment decisions.',
-    14, footerY, { maxWidth: pageWidth - 28, align: 'center' }
-  );
+  // Render each persona agent
+  Object.entries(allPersonas).forEach(([key, agent]) => {
+    if (!agent || !agent.analysis) return;
+
+    const displayName = personaNames[key] || key;
+    const signalColor: [number, number, number] = 
+      agent.signal === 'Bullish' ? COLORS.success :
+      agent.signal === 'Bearish' ? COLORS.danger :
+      COLORS.warning;
+
+    // Check if we need a new page
+    const estimatedHeight = doc.splitTextToSize(agent.analysis, pageWidth - 28).length * 4.5 + 30;
+    if (finalY + estimatedHeight > pageHeight - 30) {
+      doc.addPage();
+      setDarkBackground();
+      finalY = 20;
+    }
+
+    // Persona card header
+    doc.setFillColor(...COLORS.surface);
+    doc.roundedRect(10, finalY, pageWidth - 20, 12, 2, 2, 'F');
+    doc.setFillColor(...signalColor);
+    doc.rect(10, finalY, 3, 12, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.textPrimary);
+    doc.text(displayName, 18, finalY + 8);
+    
+    // Signal badge
+    doc.setFillColor(...signalColor);
+    doc.roundedRect(pageWidth - 55, finalY + 2, 40, 8, 2, 2, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(...COLORS.textPrimary);
+    doc.text(`${agent.signal || 'N/A'} (${agent.confidence}%)`, pageWidth - 35, finalY + 8, { align: 'center' });
+    
+    finalY += 16;
+    
+    // Analysis content
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...COLORS.textSecondary);
+    const splitAnalysis = doc.splitTextToSize(agent.analysis, pageWidth - 28);
+    doc.text(splitAnalysis, 14, finalY);
+    
+    finalY += (splitAnalysis.length * 4.5) + 10;
+  });
+
+  // --- Footer on every page ---
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    
+    const footerY = pageHeight - 15;
+    doc.setFillColor(...COLORS.surface);
+    doc.rect(0, footerY - 5, pageWidth, 20, 'F');
+    
+    doc.setFontSize(7);
+    doc.setTextColor(...COLORS.textMuted);
+    doc.text(
+      'Disclaimer: This report is AI-generated for informational purposes only. Not financial advice. Conduct your own due diligence.',
+      pageWidth / 2, footerY, { align: 'center' }
+    );
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, footerY + 6, { align: 'right' });
+  }
 
   doc.save(`${data.ticker.toUpperCase()}_Analysis_${new Date().toISOString().split('T')[0]}.pdf`);
 };
