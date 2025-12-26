@@ -123,9 +123,9 @@ export default function AIAnalysisPage() {
   };
 
   const getRecommendationColor = (rec: string) => {
-    if (rec === 'BUY') return 'text-green-600 bg-green-50 border-green-600';
-    if (rec === 'SELL') return 'text-red-600 bg-red-50 border-red-600';
-    return 'text-yellow-600 bg-yellow-50 border-yellow-600';
+    if (rec === 'BUY') return 'text-green-400 bg-green-500/20 border-green-500';
+    if (rec === 'SELL') return 'text-red-400 bg-red-500/20 border-red-500';
+    return 'text-yellow-400 bg-yellow-500/20 border-yellow-500';
   };
 
   const getRecommendationIcon = (rec: string) => {
@@ -135,7 +135,8 @@ export default function AIAnalysisPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
+    <div className="min-h-screen bg-[#303741] text-white">
+      <div className="container mx-auto py-8 px-4 max-w-6xl">
       {/* Breadcrumbs */}
       {result && (
         <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
@@ -653,6 +654,7 @@ export default function AIAnalysisPage() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

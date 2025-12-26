@@ -7,7 +7,7 @@ export default function ListsPage() {
   const sectorLists = getListsByCategory("sector");
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
+    <main className="min-h-screen bg-[#303741] text-white">
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="mb-8">
           <Link href="/" className="text-sm text-white/50 hover:text-white">

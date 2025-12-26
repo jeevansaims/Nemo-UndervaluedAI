@@ -35,7 +35,7 @@ export default async function HistoryPage() {
   });
 
   return (
-    <main className="min-h-screen bg-neutral-950 p-6 text-white md:p-12">
+    <main className="min-h-screen bg-[#303741] p-6 text-white md:p-12">
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
