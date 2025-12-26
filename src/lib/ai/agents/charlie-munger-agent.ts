@@ -67,21 +67,17 @@ Metrics for your analysis:
 - ROE: ${(roe*100).toFixed(1)}%
 - P/E Ratio: ${peRatio.toFixed(2)}
 
-Return JSON with this EXACT structure:
+IMPORTANT JSON FORMATTING RULES:
+- Your response must be valid JSON that can be parsed by JSON.parse()
+- In the reasoning field, replace ALL newlines with spaces (write as one continuous paragraph)
+- Do NOT use quotes within the reasoning text - use 'single quotes' or rephrase
+- Escape any special characters properly
+
+Return ONLY valid JSON with this structure (no markdown, no code blocks):
 {
-  "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": 0-100,
-  "reasoning": "WRITE A MINIMUM OF 300 WORDS in 3-4 detailed paragraphs:
-
-Paragraph 1: Business Quality - Analyze whether this is a 'wonderful business'. Look at the ROE and revenue growth metrics provided. Does this business have durable competitive advantages and pricing power?
-
-Paragraph 2: Mental Models - Apply your key mental models (inversion, lollapalooza effects, incentives, etc.). What could go catastrophically wrong? What are the biggest risks? Use specific examples.
-
-Paragraph 3: Valuation vs Quality - Using the P/E ratio provided, are we paying a fair price for quality? Compare to your 'wonderful business at fair price' philosophy.
-
-Paragraph 4: Final Assessment - Would you recommend this for a concentrated portfolio of great businesses? Why or why not? Be direct and candid in Charlie's no-nonsense style.
-
-Be specific, quote the concrete numbers I provided, and use your characteristic wit and directness. NO vague platitudes."
+  "signal": "Bullish or Bearish or Neutral",
+  "confidence": 80,
+  "reasoning": "Write 300+ words of detailed analysis in one continuous paragraph with spaces instead of newlines. Cover: (1) Business Quality - assess whether this is a 'wonderful business' using ROE ${(roe*100).toFixed(1)}% and revenue growth metrics (2) Mental Models - apply inversion, lollapalooza effects; what could go wrong (3) Valuation vs Quality - evaluate P/E ${peRatio.toFixed(2)} against the 'fair price for quality' standard (4) Final Assessment - concentrated portfolio recommendation. Use 'single quotes' for emphasis. Be specific and direct in Charlie's style."
 }`;
 
   const message = await anthropic.messages.create({

@@ -80,21 +80,17 @@ You have these metrics to analyze:
 - P/B Ratio: ${pbRatio.toFixed(2)}
 - D/E Ratio: ${debtToEquity.toFixed(2)}
 
-Return JSON with this EXACT structure:
+IMPORTANT JSON FORMATTING RULES:
+- Your response must be valid JSON that can be parsed by JSON.parse()
+- In the reasoning field, replace ALL newlines with spaces (write as one continuous paragraph)
+- Do NOT use quotes within the reasoning text - use 'single quotes' or rephrase
+- Escape any special characters properly
+
+Return ONLY valid JSON with this structure (no markdown, no code blocks):
 {
-  "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": 0-100,
-  "reasoning": "WRITE A MINIMUM OF 300 WORDS in 3-4 detailed paragraphs analyzing:
-
-Paragraph 1: Valuation - Deep dive into the P/E and P/B ratios provided above, and calculate the margin of safety. Explain the intrinsic value vs current price. Is this trading at a significant discount?
-
-Paragraph 2: Balance Sheet Strength - Thoroughly analyze the D/E ratio, current ratio expectations, and overall financial stability. How conservative is this company's capital structure?
-
-Paragraph 3: Earnings Quality & Stability - Discuss the quality and consistency of earnings based on the metrics. Would a defensive or enterprising investor be comfortable here?
-
-Paragraph 4: Final Verdict - Summarize whether this meets your classic value investing criteria and explain your signal/confidence with specific reasoning.
-
-Be specific, quote the numbers I provided, and write in Ben Graham's thoughtful, prudent style. NO generic statements."
+  "signal": "Bullish or Bearish or Neutral",
+  "confidence": 75,
+  "reasoning": "Write 300+ words of detailed analysis in one continuous paragraph with spaces instead of newlines. Cover: (1) Valuation - analyze P/E ${peRatio.toFixed(2)} and P/B ${pbRatio.toFixed(2)} ratios and margin of safety (2) Balance Sheet - examine D/E ${debtToEquity.toFixed(2)} and financial stability (3) Earnings Quality - assess consistency and reliability (4) Final Verdict - investment recommendation based on classic value criteria. Use 'single quotes' instead of double quotes in your prose. Be specific and quote metrics."
 }`;
 
   const message = await anthropic.messages.create({

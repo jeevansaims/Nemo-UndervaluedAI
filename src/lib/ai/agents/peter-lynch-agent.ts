@@ -65,22 +65,23 @@ ${quantSummary}
 
 CRITICAL: Your response MUST be thorough and detailed (minimum 300 words). This is for institutional investors.
 
-Return JSON with this EXACT structure:
+Metrics to analyze:
+- PEG Ratio: ${pegRatio.toFixed(2)}
+- P/E Ratio: ${peRatio.toFixed(2)}
+- Earnings Growth: ${(earningsGrowth).toFixed(1)}%
+
+IMPORTANT JSON FORMATTING RULES:
+- Your response must be valid JSON that can be parsed by JSON.parse()
+- In the reasoning field, replace ALL newlines with spaces (write as one continuous paragraph)
+- Do NOT use quotes within the reasoning text - use 'single quotes' or rephrase
+- Escape any special characters properly
+
+Return ONLY valid JSON with this structure (no markdown, no code blocks):
 {
-  \"signal\": \"Bullish\" | \"Bearish\" | \"Neutral\",
-  \"confidence\": 0-100,
-  \"reasoning\": \"WRITE AT LEAST 300 WORDS in 3-4 detailed paragraphs:
-
-Paragraph 1: PEG Ratio Analysis - Deep dive into the PEG ratio (${pegRatio.toFixed(2)}). At P/E ${peRatio.toFixed(2)} and growth rate ${(earningsGrowth).toFixed(1)}%, is this a fair price for growth? Explain what this PEG tells us.
-
-Paragraph 2: Growth Story - Analyze the growth narrative. Earnings growth, market expansion potential. Is this a fast grower, stalwart, or slow grower? Does the story make sense?
-
-Paragraph 3: Category Analysis - What type of stock is this (fast grower, stalwart, turnaround, asset play, cyclical)? Does it fit your 'invest in what you know' philosophy? What's the earnings power?
-
-Paragraph 4: Investment Decision - Would you put this in your portfolio? At what price would it become a 10-bagger candidate? Be specific with numbers and your classic storytelling style.
-
-Use Peter Lynch's accessible, story-driven style. Quote specific metrics and make it practical.\"\n}
-`;
+  "signal": "Bullish or Bearish or Neutral",
+  "confidence": 75,
+  "reasoning": "Write 300+ words of detailed analysis in one continuous paragraph with spaces instead of newlines. Cover: (1) PEG Ratio - analyze PEG ${pegRatio.toFixed(2)} for value vs growth (2) Growth Story - evaluate earnings growth ${(earningsGrowth).toFixed(1)}% and categorize as fast grower/stalwart/slow grower (3) Stock Category - classify this investment type and assess 'invest in what you know' fit (4) Ten-Bagger Potential - portfolio recommendation with specific price targets. Use 'single quotes' for emphasis. Be practical and story-driven in Peter Lynch's style."
+}`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
