@@ -101,27 +101,20 @@ export default function AIAnalysisPage() {
   const [remainingAnalyses, setRemainingAnalyses] = useState<number | string>('?');
 
   const requestAnalysis = async () => {
-    console.log('[DEBUG] requestAnalysis called, ticker:', ticker);
-
     if (!ticker || ticker.trim().length === 0) {
-      console.log('[DEBUG] Ticker validation failed');
       toast.error('Please enter a ticker symbol');
       return;
     }
 
-    console.log('[DEBUG] Setting loading to true');
     setLoading(true);
     setResult(null);
 
     try {
-      console.log('[DEBUG] Fetching analysis for:', ticker.toUpperCase());
       const response = await fetch(`/api/ai-analysis/${ticker.toUpperCase()}`, {
         method: 'POST',
       });
 
-      console.log('[DEBUG] Response status:', response.status);
       const data = await response.json();
-      console.log('[DEBUG] Response data:', data);
 
       if (!response.ok) {
         if (data.limitReached) {
@@ -135,10 +128,9 @@ export default function AIAnalysisPage() {
       setRemainingAnalyses(data.remainingAnalyses);
       toast.success(`Analysis completed in ${(data.result.processingTime / 1000).toFixed(1)}s`);
     } catch (error) {
-      console.error('[DEBUG] Analysis error:', error);
+      console.error('Analysis error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to analyze stock');
     } finally {
-      console.log('[DEBUG] Setting loading to false');
       setLoading(false);
     }
   };
@@ -204,13 +196,7 @@ export default function AIAnalysisPage() {
               disabled={loading}
               className="max-w-md"
             />
-            <Button
-              onClick={() => {
-                console.log('[DEBUG] Button clicked!');
-                requestAnalysis();
-              }}
-              disabled={loading}
-            >
+            <Button onClick={requestAnalysis} disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
