@@ -26,45 +26,28 @@ export function parseAgentResponse(responseText: string, agentName: string): Age
     if (jsonMatch) {
       console.log(`[${agentName}] FOUND JSON MATCH (first 500 chars):`, jsonMatch[0].substring(0, 500));
       
-      // APPROACH: Try JSON.parse first (works if Claude returns valid JSON)
-      // If that fails, escape newlines within the "reasoning" value only
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        result.signal = parsed.signal || result.signal;
-        result.confidence = parsed.confidence || result.confidence;
-        result.reasoning = parsed.reasoning || '';
-        console.log(`[${agentName}] PARSED SUCCESSFULLY (no sanitization needed) - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning length: ${result.reasoning.length}`);
-      } catch (parseError) {
-        console.log(`[${agentName}] Direct parse failed, trying sanitization:`, parseError);
-        
-        // CRITICAL FIX: Escape newlines ONLY within string values, not structural JSON whitespace
-        // Use a more targeted replacement that preserves JSON formatting but fixes string content
-        const sanitizedJson = jsonMatch[0]
-          // First, let's try to extract and fix the reasoning field specifically
-          .replace(/"reasoning":\s*"([\s\S]*?)(?="(?:\s*,|\s*\}))/g, (match, reasoningText) => {
-            // Escape control characters within the reasoning text
-            const escapedReasoning = reasoningText
-              .replace(/\\/g, '\\\\')  // Escape backslashes first
-              .replace(/"/g, '\\"')    // Escape quotes
-              .replace(/\n/g, '\\n')   // Escape newlines
-              .replace(/\r/g, '\\r')   // Escape carriage returns
-              .replace(/\t/g, '\\t');  // Escape tabs
-            return `"reasoning": "${escapedReasoning}"`;
-          });
-        
-        console.log(`[${agentName}] SANITIZED JSON (first 300 chars):`, sanitizedJson.substring(0, 300));
-        
-        const parsed = JSON.parse(sanitizedJson);
-        result.signal = parsed.signal || result.signal;
-        result.confidence = parsed.confidence || result.confidence;
-        result.reasoning = parsed.reasoning || '';
-        console.log(`[${agentName}] PARSED SUCCESSFULLY after sanitization - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning length: ${result.reasoning.length}`);
-      }
+      // CRITICAL FIX: Replace ALL newlines/tabs/CR with spaces
+      // This is safe because:
+      // 1. Structural JSON whitespace (formatting newlines) becomes valid spaces
+      // 2. Newlines within string values (reasoning text) become spaces, preserving all text
+      // 3. No need to distinguish between structural vs string-value newlines
+      const sanitizedJson = jsonMatch[0]
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/\t/g, ' ');
+      
+      console.log(`[${agentName}] SANITIZED JSON (first 300 chars):`, sanitizedJson.substring(0, 300));
+      
+      const parsed = JSON.parse(sanitizedJson);
+      result.signal = parsed.signal || result.signal;
+      result.confidence = parsed.confidence || result.confidence;
+      result.reasoning = parsed.reasoning || '';
+      console.log(`[${agentName}] PARSED SUCCESSFULLY - Signal: ${result.signal}, Confidence: ${result.confidence}, Reasoning length: ${result.reasoning.length}`);
     } else {
       console.log(`[${agentName}] NO JSON MATCH FOUND - trying fallback`);
     }
   } catch (e) {
-    console.error(`[${agentName}] JSON PARSE ERROR (all attempts failed):`, e);
+    console.error(`[${agentName}] JSON PARSE ERROR:`, e);
     console.error(`[${agentName}] Trying fallback text extraction`);
   }
 
