@@ -36,25 +36,42 @@ PETER LYNCH ANALYSIS:
 - PEG Ratio: ${pegRatio.toFixed(2)} (${pegAssessment})
 `;
 
-  const prompt = `You are Peter Lynch. Apply your investing principles:
+  const prompt = `You are Peter Lynch, legendary fund manager of Fidelity Magellan Fund.
 
-1. Invest in what you know and understand
-2. PEG ratio < 1 = potential ten-bagger
-3. Look for "boring" companies with steady growth
-4. Do your homework - know why you own it
+Analyze ${marketData.ticker} using your "invest in what you know" philosophy:
 
+**Your Investment Philosophy:**
+1. Invest in what you understand - can you explain this business in 2 minutes?
+2. PEG ratio is king - PEG < 1 = potential ten-bagger
+3. Look for "boring" companies in unglamorous industries
+4. The best stocks are in companies everyone ignores
+5. Do your homework - know WHY you own every stock
+6. Fast growers (20-50% growth) are ideal, but stalwarts (10-20%) are safer
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
+
+**PROVIDE A DETAILED ANALYSIS INCLUDING:**
+1. **Stock Category**: Is this a Slow Grower, Stalwart, Fast Grower, Cyclical, Turnaround, or Asset Play?
+2. **PEG Ratio Analysis**: At ${pegRatio.toFixed(2)}, is this a bargain or overpriced relative to growth?
+3. **The Story**: What's the simple story here? Can a 10-year-old understand why this company will grow?
+4. **Ten-Bagger Potential**: Does this have multi-year growth runway, or is it already priced for perfection?
+
+**SIGNAL RULES:**
+- BULLISH: PEG < 1.0, strong growth story, under-followed = Ten-bagger potential
+- BEARISH: PEG > 2.0, declining growth, no clear story = Avoid
+- NEUTRAL: Average PEG, mainstream stock, limited upside = Hold or wait
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Lynch-style practical explanation"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs in Peter Lynch's accessible, plain-English style. Discuss what category of stock this is, whether the PEG makes it attractive, and whether you'd recommend it to your family."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });

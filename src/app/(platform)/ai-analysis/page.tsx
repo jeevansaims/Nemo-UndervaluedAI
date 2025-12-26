@@ -416,31 +416,39 @@ export default function AIAnalysisPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Investor Analyst Signals</CardTitle>
-                  <CardDescription>How 12 famous investors would view this stock</CardDescription>
+                  <CardDescription>How 12 famous investors would view this stock - click to expand for detailed reasoning</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {result.personaAgents ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="space-y-4">
                       {Object.entries(result.personaAgents).map(([key, agent]) => (
-                        <div key={key} className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="font-medium text-sm capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </span>
-                            <Badge 
-                              variant={
-                                agent.signal === 'Bullish' ? 'default' : 
-                                agent.signal === 'Bearish' ? 'destructive' : 'secondary'
-                              }
-                              className={agent.signal === 'Bullish' ? 'bg-green-600' : ''}
-                            >
-                              {agent.signal}
-                            </Badge>
+                        <details key={key} className="border rounded-lg overflow-hidden group">
+                          <summary className="p-4 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium capitalize">
+                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                              </span>
+                              <Badge 
+                                variant={
+                                  agent.signal === 'Bullish' ? 'default' : 
+                                  agent.signal === 'Bearish' ? 'destructive' : 'secondary'
+                                }
+                                className={agent.signal === 'Bullish' ? 'bg-green-600' : ''}
+                              >
+                                {agent.signal}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                ({agent.confidence}% confidence)
+                              </span>
+                            </div>
+                            <span className="text-muted-foreground text-sm group-open:rotate-180 transition-transform">▼</span>
+                          </summary>
+                          <div className="p-4 border-t bg-background">
+                            <div className="prose prose-sm max-w-none">
+                              <pre className="whitespace-pre-wrap font-sans text-sm">{agent.analysis}</pre>
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            Confidence: {agent.confidence}%
-                          </div>
-                        </div>
+                        </details>
                       ))}
                     </div>
                   ) : (

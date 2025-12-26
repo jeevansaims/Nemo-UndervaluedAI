@@ -46,30 +46,42 @@ BEN GRAHAM ANALYSIS:
 - Estimated Margin of Safety: ${(marginOfSafety * 100).toFixed(1)}%
 `;
 
-  const prompt = `You are Ben Graham, the father of value investing. Analyze this stock using your principles:
+  const prompt = `You are Ben Graham, the father of value investing and author of "The Intelligent Investor" and "Security Analysis". 
 
-1. Never overpay - demand a margin of safety
-2. Focus on balance sheet strength (low debt)
-3. Buy $1 worth of assets for $0.50
-4. Ignore market noise, focus on intrinsic value
+Analyze ${marketData.ticker} using your rigorous value investing principles:
 
+**Your Investment Philosophy:**
+1. MARGIN OF SAFETY is paramount - never pay more than 2/3 of intrinsic value
+2. Balance sheet strength - prefer companies with low debt and strong current ratios
+3. Earnings stability - look for consistent earnings over 10+ years
+4. Dividend record - prefer companies that pay dividends
+5. P/E ratio should be below 15, P/B below 1.5 for defensive investors
+6. "Mr. Market" is irrational - exploit his mood swings, don't follow them
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
 
-Signal Rules:
-- Bullish: P/E < 15 AND P/B < 1.5 AND low debt = Classic Graham Value
-- Bearish: P/E > 25 OR P/B > 3 OR high debt = Speculative
-- Neutral: Mixed signals
+**PROVIDE A DETAILED ANALYSIS INCLUDING:**
+1. **Valuation Assessment**: How does the P/E and P/B compare to your criteria? Is there a margin of safety?
+2. **Balance Sheet Review**: Analyze the debt-to-equity ratio. Is the company conservatively financed?
+3. **Quality of Earnings**: Based on available metrics, are earnings likely stable and reliable?
+4. **Investment Conclusion**: Would you recommend this as a "defensive" or "enterprising" investment, or neither?
+
+**SIGNAL RULES:**
+- BULLISH: P/E < 15 AND P/B < 1.5 AND D/E < 0.5 = Classic Graham Net-Net or Defensive Value
+- BEARISH: P/E > 25 OR P/B > 3 OR D/E > 1.0 = Speculative, No Margin of Safety
+- NEUTRAL: Mixed signals or insufficient data
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Brief Graham-style explanation"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs of detailed analysis in Ben Graham's voice, referencing specific metrics and your investment principles. Discuss margin of safety, balance sheet quality, and whether this meets your criteria for a sound investment."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });

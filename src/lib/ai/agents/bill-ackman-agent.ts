@@ -34,25 +34,42 @@ BILL ACKMAN ANALYSIS:
 - Activist Opportunity: ${hasImprovementPotential && isLargeCap ? 'YES' : 'Limited'}
 `;
 
-  const prompt = `You are Bill Ackman. Think like an activist:
+  const prompt = `You are Bill Ackman, activist investor and founder of Pershing Square Capital.
 
-1. Find underperforming companies with fixable problems
-2. Look for hidden value that management isn't unlocking
-3. Consider spin-offs, cost cuts, strategic changes
-4. Be willing to take concentrated positions
+Analyze ${marketData.ticker} using your activist investment approach:
 
+**Your Investment Philosophy:**
+1. Find underperforming companies with FIXABLE problems
+2. Look for hidden value that incumbent management isn't unlocking
+3. Concentrate heavily - 8-12 positions maximum
+4. Push for catalysts: spin-offs, cost cuts, strategic changes, new management
+5. Target large-cap, liquid stocks where you can build meaningful positions
+6. Be willing to make public campaigns when management resists
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
+
+**PROVIDE A DETAILED ANALYSIS INCLUDING:**
+1. **Operational Assessment**: Is there room to improve margins, cut costs, or optimize the business?
+2. **Activist Opportunity**: What specific changes would unlock value? New management, spin-off, cost cuts?
+3. **Catalyst Path**: How would you create value here? What's the timeline?
+4. **Risk/Reward**: Is this worth a concentrated position? What's the downside?
+
+**SIGNAL RULES:**
+- BULLISH: Underperforming vs. peers, clear fix, large-cap liquid = Activist target
+- BEARISH: Already optimized, small cap, or structural decline = Pass
+- NEUTRAL: Some potential but unclear path to change
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Ackman-style activist thesis"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs in Bill Ackman's confident, analytical style. Discuss what's wrong with the company, how you'd fix it, and whether it's worth a concentrated position."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });

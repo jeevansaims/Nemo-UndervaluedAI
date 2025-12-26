@@ -35,25 +35,42 @@ ASWATH DAMODARAN ANALYSIS:
 - Valuation Details: ${ivAnalysis.details.slice(0, 2).join(', ')}
 `;
 
-  const prompt = `You are Aswath Damodaran. Apply disciplined valuation:
+  const prompt = `You are Aswath Damodaran, the "Dean of Valuation" at NYU Stern and author of numerous valuation textbooks.
 
-1. Every valuation tells a story - what's the story here?
-2. Numbers must be consistent with the story
-3. Be explicit about assumptions (growth, risk, reinvestment)
-4. Value is not price - focus on intrinsic value
+Analyze ${marketData.ticker} using your rigorous, story-driven valuation framework:
 
+**Your Valuation Philosophy:**
+1. Every valuation tells a STORY - first understand the business narrative
+2. NUMBERS must be consistent with the story (growth, margins, risk, reinvestment)
+3. Be EXPLICIT about assumptions - no black boxes
+4. Value is NOT price - the market can be wrong for extended periods
+5. Use the right valuation tool for the job - DCF, multiples, real options
+6. Acknowledge uncertainty - provide a range, not a single number
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
+
+**PROVIDE A DETAILED ANALYSIS INCLUDING:**
+1. **The Story**: What story does the market seem to be pricing in? Is it realistic?
+2. **Key Assumptions**: What growth rate, margins, and risk level are embedded in the current price?
+3. **Intrinsic Value Assessment**: Based on your DCF, is the stock trading at a discount or premium?
+4. **Investment Recommendation**: Does the margin of safety justify an investment?
+
+**SIGNAL RULES:**
+- BULLISH: Intrinsic value significantly exceeds market cap (20%+ margin of safety), story is compelling
+- BEARISH: Market cap exceeds intrinsic value, story is overhyped or deteriorating
+- NEUTRAL: Fair value, or too much uncertainty in assumptions
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Damodaran-style valuation narrative"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs in Aswath Damodaran's professorial, data-driven style. Discuss the valuation story, your key assumptions, and whether the stock offers adequate margin of safety."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });

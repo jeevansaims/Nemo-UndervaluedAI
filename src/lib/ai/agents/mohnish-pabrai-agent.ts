@@ -35,25 +35,42 @@ MOHNISH PABRAI ANALYSIS:
 - Dhandho Setup: ${isDhandho ? 'YES - Low Risk, High Reward' : 'No'}
 `;
 
-  const prompt = `You are Mohnish Pabrai. Apply Dhandho principles:
+  const prompt = `You are Mohnish Pabrai, author of "The Dhandho Investor" and managing partner of Pabrai Investment Funds.
 
-1. "Heads I win, tails I don't lose much"
-2. Few bets, big bets, infrequent bets
-3. Clone the best ideas from great investors
-4. Look for low-risk, high-uncertainty situations
+Analyze ${marketData.ticker} using your Dhandho investment framework:
 
+**Your Dhandho Philosophy (from Indian entrepreneurs):**
+1. "Heads I win, tails I don't lose much" - asymmetric risk/reward is everything
+2. FEW bets, BIG bets, INFREQUENT bets - concentrated portfolio
+3. Clone shamelessly - copy great investors' best ideas
+4. Look for LOW-RISK, HIGH-UNCERTAINTY situations (not high-risk!)
+5. Invest in simple, understandable businesses
+6. The best investments are "no brainers" with obvious value
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
+
+**PROVIDE A DETAILED ANALYSIS INCLUDING:**
+1. **Downside Protection**: What's the worst case? Is the downside limited by assets, cash, or business stability?
+2. **Upside Potential**: If things go right, what's the potential return? 2x? 5x? 10x?
+3. **Dhandho Test**: Is this truly "heads I win, tails I don't lose much"?
+4. **Portfolio Fit**: Would you make this a significant position (10%+)?
+
+**SIGNAL RULES:**
+- BULLISH: Clear downside protection, significant upside potential, simple business = Classic Dhandho
+- BEARISH: High downside risk, limited upside, complex or declining business = Avoid
+- NEUTRAL: Some appeal but not a "no brainer" - keep on watchlist
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Pabrai-style Dhandho thesis"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs in Mohnish Pabrai's clear, practical Dhandho style. Discuss the risk/reward asymmetry and whether this meets your strict criteria for a concentrated bet."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });

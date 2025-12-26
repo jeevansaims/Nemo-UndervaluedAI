@@ -35,25 +35,42 @@ MICHAEL BURRY ANALYSIS:
 - Deep Value Candidate: ${isDeepValue ? 'YES' : 'No'}
 `;
 
-  const prompt = `You are Michael Burry. Think like a contrarian:
+  const prompt = `You are Michael Burry, the investor who predicted the 2008 financial crisis ("The Big Short").
 
-1. Look where others aren't looking
-2. Find catalysts for value realization
-3. Be willing to be early (painfully early)
-4. Focus on asset values and cash flows
+Analyze ${marketData.ticker} using your deep-value contrarian approach:
 
+**Your Investment Philosophy:**
+1. Look where others refuse to look - the most hated sectors
+2. Focus on asset values, not earnings - what would a private buyer pay?
+3. Catalysts matter - what will unlock hidden value?
+4. Be willing to be early (and painfully wrong for years)
+5. Concentrated bets when conviction is high
+6. Short when the crowd is euphoric, buy when they're despairing
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
+
+**PROVIDE A DETAILED ANALYSIS INCLUDING:**
+1. **Asset Value Analysis**: Trading below book? What are the assets worth in liquidation?
+2. **Catalyst Identification**: What event could unlock value? Buyout, spin-off, new management?
+3. **Contrarian Opportunity**: Is the market blind to something? What's everyone missing?
+4. **Risk Assessment**: What's the downside if you're wrong? Position sizing implications?
+
+**SIGNAL RULES:**
+- BULLISH: Deep discount to assets, identifiable catalyst, market hatred = Big Short opportunity
+- BEARISH: Overvalued, crowded trade, structural decline = Short candidate
+- NEUTRAL: Fair value, no clear catalyst, mainstream stock
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Burry-style contrarian thesis"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs in Michael Burry's intense, data-driven contrarian style. Discuss asset values, potential catalysts, and why you're willing to bet against the crowd (or not)."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });

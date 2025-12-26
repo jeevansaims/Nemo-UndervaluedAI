@@ -186,12 +186,11 @@ export async function POST(
   { params }: { params: Promise<{ ticker: string }> }
 ) {
   try {
-    // TEMPORARY: Auth check disabled for testing PT/SL feature
-    // TODO: Re-enable auth once testing is complete
-    // const session = await auth();
-    // if (!session?.user?.email) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // 1. Authenticate user
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // 2. Validate API keys
     try {
@@ -206,64 +205,92 @@ export async function POST(
     const { ticker: tickerParam } = await params;
     const upperTicker = tickerParam.toUpperCase();
 
-    // 3. Get user - TEMPORARILY BYPASSED
-    // const user = await prisma.user.findUnique({
-    //   where: { email: session.user.email },
-    //   select: { id: true, isPremium: true },
-    // });
-    // if (!user) {
-    //   return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    // }
+    // 3. Get user from database
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, isPro: true },
+    });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
-    // 4. Fetch market data
+    // 4. Check usage limits for free users
+    if (!user.isPro) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const analysesThisMonth = await prisma.stockAnalysis.count({
+        where: {
+          userId: user.id,
+          createdAt: { gte: startOfMonth },
+        },
+      });
+      if (analysesThisMonth >= FREE_ANALYSIS_LIMIT) {
+        return NextResponse.json(
+          {
+            error: `Free tier limit reached. You've used ${analysesThisMonth}/${FREE_ANALYSIS_LIMIT} analyses this month.`,
+            limitReached: true,
+            limit: FREE_ANALYSIS_LIMIT,
+            used: analysesThisMonth,
+          },
+          { status: 429 }
+        );
+      }
+    }
+
+    // 5. Fetch market data
     const marketData = await fetchMarketData(upperTicker);
-
-    // 5. Check usage limits - TEMPORARILY BYPASSED FOR TESTING
-    /*
-    // if (!user.isPremium) {
-    //   const startOfMonth = new Date();
-    //   startOfMonth.setDate(1);
-    //   startOfMonth.setHours(0, 0, 0, 0);
-    //   const analysesThisMonth = await prisma.stockAnalysis.count({
-    //     where: {
-    //       userId: user.id,
-    //       createdAt: { gte: startOfMonth },
-    //     },
-    //   });
-    //   if (analysesThisMonth >= FREE_ANALYSIS_LIMIT) {
-    //     return NextResponse.json(
-    //       {
-    //         error: `Free tier limit reached. You've used ${analysesThisMonth}/${FREE_ANALYSIS_LIMIT} analyses this month.`,
-    //         limit: FREE_ANALYSIS_LIMIT,
-    //         used: analysesThisMonth,
-    //       },
-    //       { status: 429 }
-    //     );
-    //   }
-    // }
-    */
     
     // 6. Run AI analysis
     const result = await runStockAnalysis(marketData, undefined);
 
-    // 7. Store analysis record - TEMPORARILY BYPASSED FOR TESTING
-    // const analysis = await prisma.stockAnalysis.create({
-    //   data: {
-    //     userId: user.id,
-    //     ticker: upperTicker,
-    //     status: 'COMPLETED',
-    //     recommendation: result.portfolioManager.rating,
-    //     targetPrice: result.portfolioManager.targetPrice ?? null,
-    //     confidence: result.portfolioManager.confidence,
-    //     processingTime: result.processingTime,
-    //     agentResults: JSON.stringify(result),
-    //   },
-    // });
+    // 7. Normalize portfolio manager result for frontend compatibility
+    // Handle both 'rating' and 'recommendation', 'confidence' and 'confidenceScore'
+    if (result.portfolioManager) {
+      const pm = result.portfolioManager as any;
+      // Ensure both field names work
+      pm.recommendation = pm.recommendation || pm.rating;
+      pm.rating = pm.rating || pm.recommendation;
+      pm.confidenceScore = pm.confidenceScore || pm.confidence;
+      pm.confidence = pm.confidence || pm.confidenceScore;
+      pm.keyTakeaways = pm.keyTakeaways || pm.investmentThesis || [];
+      pm.finalReport = pm.finalReport || pm.analysis || pm.summary || '';
+    }
 
-    // 8. Return the analysis result
+    // 8. Store analysis record in database
+    const analysis = await prisma.stockAnalysis.create({
+      data: {
+        userId: user.id,
+        ticker: upperTicker,
+        status: 'COMPLETED',
+        recommendation: result.portfolioManager.rating || result.portfolioManager.recommendation || 'HOLD',
+        targetPrice: result.portfolioManager.targetPrice ?? null,
+        confidenceScore: result.portfolioManager.confidence ?? result.portfolioManager.confidenceScore ?? 50,
+        processingTime: result.processingTime,
+        agentResults: JSON.stringify(result),
+      },
+    });
+
+    // 9. Calculate remaining analyses for response
+    let remainingAnalyses: number | string = 'unlimited';
+    if (!user.isPro) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const count = await prisma.stockAnalysis.count({
+        where: {
+          userId: user.id,
+          createdAt: { gte: startOfMonth },
+        },
+      });
+      remainingAnalyses = Math.max(0, FREE_ANALYSIS_LIMIT - count);
+    }
+
+    // 10. Return the analysis result
     return NextResponse.json({
       success: true,
-      // analysisId: analysis.id, // Commented out since we're not saving
+      analysisId: analysis.id,
+      remainingAnalyses,
       result,
     });
   } catch (error) {
@@ -286,24 +313,20 @@ export async function GET(
   { params }: { params: Promise<{ ticker: string }> }
 ) {
   try {
-    // TEMPORARY: Auth check disabled for testing
-    // TODO: Re-enable auth once testing is complete
-    // const session = await auth();
-    // if (!session?.user?.email) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // 1. Authenticate user
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // For testing without auth, we'll use a dummy user ID or bypass user check if possible
-    // If user-specific data is needed, mock 'session.user.email' or 'user' object
+    // 2. Get user from database
     const user = await prisma.user.findUnique({
-      where: { email: 'test@example.com' }, // Use a dummy email for testing
+      where: { email: session.user.email },
       select: { id: true },
     });
 
     if (!user) {
-      // If the dummy user doesn't exist, create one or return an error
-      // For now, we'll return an error if the dummy user isn't found
-      return NextResponse.json({ error: 'Test user not found in DB' }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const { ticker } = await params;

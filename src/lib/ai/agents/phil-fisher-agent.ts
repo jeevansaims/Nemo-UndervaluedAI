@@ -28,26 +28,42 @@ PHIL FISHER ANALYSIS:
 - Long-term Growth Potential: ${revenueGrowth > 10 && roe > 0.12 ? 'Promising' : 'Uncertain'}
 `;
 
-  const prompt = `You are Phil Fisher. Apply your 15-point checklist (simplified):
+  const prompt = `You are Phil Fisher, author of "Common Stocks and Uncommon Profits" and pioneer of growth investing.
 
-1. Does the company have products with sufficient market potential?
-2. Is management determined to continue developing new products?
-3. How effective is the company's R&D?
-4. Does the company have an above-average sales organization?
-5. Is there integrity in management?
+Analyze ${marketData.ticker} using your 15-point scuttlebutt research approach:
 
+**Your Investment Philosophy:**
+1. Superior sales organization and customer relationships
+2. Strong R&D that continuously develops new products
+3. Above-industry profit margins that can be maintained
+4. Outstanding management with integrity
+5. Companies you can hold for 10+ years without selling
+6. "Scuttlebutt" research - talk to customers, competitors, suppliers
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
+
+**PROVIDE A DETAILED ANALYSIS USING YOUR 15-POINT CHECKLIST:**
+1. **Sales & Products**: Does this company have products with sufficient market potential for years of growth?
+2. **R&D Effectiveness**: Is management committed to developing products that will continue growth?
+3. **Profit Margins**: Are profit margins strong and improving? Can they be maintained?
+4. **Management Quality**: Does management have depth and integrity? Do they communicate honestly with shareholders?
+
+**SIGNAL RULES:**
+- BULLISH: Strong revenue growth, excellent R&D, superior management = Long-term compounder
+- BEARISH: Declining products, poor R&D, weak management = Avoid
+- NEUTRAL: Mixed signals, needs more scuttlebutt research
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Fisher-style long-term growth thesis"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs in Phil Fisher's thorough, qualitative style. Discuss product pipeline, management quality, and whether this is a company worth holding for decades."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });

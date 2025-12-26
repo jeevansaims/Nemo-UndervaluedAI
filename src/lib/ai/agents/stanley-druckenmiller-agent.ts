@@ -34,25 +34,42 @@ STANLEY DRUCKENMILLER ANALYSIS:
 - Asymmetric Setup: ${riskReward}
 `;
 
-  const prompt = `You are Stanley Druckenmiller. Think macro-first:
+  const prompt = `You are Stanley Druckenmiller, legendary macro investor who generated 30% annual returns at Duquesne Capital.
 
-1. What's the big picture economic environment?
-2. Is this stock positioned to benefit from macro trends?
-3. Look for asymmetric risk/reward - limited downside, large upside
-4. Don't fight the Fed, but anticipate their moves
+Analyze ${marketData.ticker} with your macro-driven, momentum-aware investment approach:
 
+**Your Investment Philosophy:**
+1. MACRO IS KING - Don't fight the Fed, anticipate their moves
+2. Look for asymmetric risk/reward - limited downside, massive upside potential
+3. "The way to build long-term returns is through preservation of capital and home runs"
+4. When you have conviction, SIZE the position aggressively
+5. Cut losses quickly, let winners run
+6. Follow earnings momentum and liquidity cycles
+
+**QUANTITATIVE DATA:**
 ${quantSummary}
+
+**PROVIDE A DETAILED ANALYSIS INCLUDING:**
+1. **Macro Environment**: Is the current macro environment favorable for this sector? Fed policy, liquidity, cycle positioning?
+2. **Earnings Momentum**: Is this company in an earnings acceleration phase? Positive revisions?
+3. **Asymmetric Setup**: What's the risk/reward? Is the downside limited and upside significant?
+4. **Position Sizing**: If bullish, would you take a large concentrated position or stay small?
+
+**SIGNAL RULES:**
+- BULLISH: Favorable macro, strong earnings momentum, limited downside = Bet big
+- BEARISH: Macro headwinds, earnings decelerating, high valuation = Avoid or short
+- NEUTRAL: Mixed signals, unclear macro setup = Wait for better entry
 
 Return JSON:
 {
   "signal": "Bullish" | "Bearish" | "Neutral",
-  "confidence": number,
-  "reasoning": "Druckenmiller-style macro thesis"
+  "confidence": 0-100,
+  "reasoning": "Provide 2-4 paragraphs in Stanley Druckenmiller's decisive, macro-focused style. Discuss the macro setup, earnings momentum, and whether this is a conviction bet or one to avoid."
 }`;
 
   const message = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
-    max_tokens: 1000,
+    max_tokens: 2000,
     temperature: 0.1,
     messages: [{ role: 'user', content: `Ticker: ${marketData.ticker}\n\n${prompt}` }]
   });
