@@ -283,9 +283,31 @@ export const generateAnalysisPDF = (data: AnalysisData) => {
       agent.signal === 'Bearish' ? COLORS.danger :
       COLORS.warning;
 
-    // Check if we need a new page
-    const estimatedHeight = doc.splitTextToSize(agent.analysis, pageWidth - 28).length * 4.5 + 30;
-    if (finalY + estimatedHeight > pageHeight - 30) {
+    // Extract just the detailed reasoning text, removing markdown headers and duplicate info
+    // The agent.analysis contains: "### Agent Name Analysis\n**Signal: X** (Y%)\n\nDetailed reasoning..."
+    let reasoningText = agent.analysis;
+    
+    // Remove markdown headers (lines starting with ###)
+    reasoningText = reasoningText.replace(/^###\s+.*$/gm, '');
+    
+    // Remove signal/confidence lines (e.g., "**Signal: Bearish** (80%)")
+    reasoningText = reasoningText.replace(/\*\*Signal:\s*(Bullish|Bearish|Neutral)\*\*\s*\(\d+%\)/gi, '');
+    
+    // Remove metrics display lines (e.g., "**Metrics:** P/E: 5.76, P/B: 3.90")
+    reasoningText = reasoningText.replace(/\*\*Metrics:\*\*[^\n]*/gi, '');
+    reasoningText = reasoningText.replace(/\*\*.*?\*\*:\s*[^\n]*/g, ''); // Remove other bold label patterns
+    
+    // Remove extra whitespace and trim
+    reasoningText = reasoningText.replace(/\n\n+/g, '\n\n').trim();
+    
+    // If after cleaning we have no text, skip this agent
+    if (!reasoningText || reasoningText.length < 50) return;
+
+    // Better height estimation for page breaks (use cleaned text)
+    const splitTextLines = doc.splitTextToSize(reasoningText, pageWidth - 28);
+    const estimatedHeight = splitTextLines.length * 4.2 + 35; // More accurate line height
+    
+    if (finalY + estimatedHeight > pageHeight - 35) {
       doc.addPage();
       setDarkBackground();
       finalY = 20;
@@ -311,14 +333,42 @@ export const generateAnalysisPDF = (data: AnalysisData) => {
     
     finalY += 16;
     
-    // Analysis content
-    doc.setFontSize(9);
+    // Analysis content - use cleaned reasoning text
+    doc.setFontSize(8.5); // Slightly smaller font for better fit
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.textSecondary);
-    const splitAnalysis = doc.splitTextToSize(agent.analysis, pageWidth - 28);
-    doc.text(splitAnalysis, 14, finalY);
     
-    finalY += (splitAnalysis.length * 4.5) + 10;
+    // Re-split with the correct font size
+    const finalSplitAnalysis = doc.splitTextToSize(reasoningText, pageWidth - 28);
+    
+    // Check again if content fits, if not add page
+    if (finalY + (finalSplitAnalysis.length * 4.2) > pageHeight - 25) {
+      doc.addPage();
+      setDarkBackground();
+      finalY = 20;
+      
+      // Re-render header on new page
+      doc.setFillColor(...COLORS.surface);
+      doc.roundedRect(10, finalY, pageWidth - 20, 12, 2, 2, 'F');
+      doc.setFillColor(...signalColor);
+      doc.rect(10, finalY, 3, 12, 'F');
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...COLORS.textPrimary);
+      doc.text(displayName, 18, finalY + 8);
+      doc.setFillColor(...signalColor);
+      doc.roundedRect(pageWidth - 55, finalY + 2, 40, 8, 2, 2, 'F');
+      doc.setFontSize(8);
+      doc.text(`${agent.signal || 'N/A'} (${agent.confidence}%)`, pageWidth - 35, finalY + 8, { align: 'center' });
+      finalY += 16;
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...COLORS.textSecondary);
+    }
+    
+    doc.text(finalSplitAnalysis, 14, finalY);
+    
+    finalY += (finalSplitAnalysis.length * 4.2) + 12; // Extra spacing between agents
   });
 
   // --- Footer on every page ---
